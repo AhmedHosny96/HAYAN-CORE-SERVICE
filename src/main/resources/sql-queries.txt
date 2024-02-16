@@ -1,0 +1,54 @@
+CREATE TABLE Agent (
+    Id BIGINT PRIMARY KEY IDENTITY,
+    Name VARCHAR(255),
+    ContactPerson VARCHAR(255),
+    Country VARCHAR(255),
+    City VARCHAR(255),
+    ContactEmail VARCHAR(255),
+    Status INT,
+    TypeId BIGINT, -- Assuming TypeId is the foreign key referencing AgentType
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME,
+    FOREIGN KEY (TypeId) REFERENCES AgentType(Id) -- Assuming AgentType has a primary key named Id
+);
+
+
+CREATE TABLE AgentType (
+    Id INT PRIMARY KEY IDENTITY,
+    Type VARCHAR(255) UNIQUE,
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME
+);
+
+
+CREATE TABLE Role (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL UNIQUE,
+    Description TEXT,
+    Status INT,
+    CreatedDate DATETIME NOT NULL,
+    UpdatedDate DATETIME,
+    CONSTRAINT UC_Role_Name UNIQUE (Name)
+);
+
+
+
+CREATE TABLE Users (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    Username NVARCHAR(255),
+    Email NVARCHAR(255),
+    PhoneNumber NVARCHAR(255),
+    FullName NVARCHAR(255),
+	   Password NVARCHAR(255),
+
+    agentId BIGINT,
+    FOREIGN KEY (agentId) REFERENCES Agent(Id),
+	    roleId INT,
+    FOREIGN KEY (roleId) REFERENCES Role(id),
+
+	FirstLogin BIT,
+    Status BIT,
+    CreatedBy NVARCHAR(255),
+    CreatedDate DATETIME
+
+);

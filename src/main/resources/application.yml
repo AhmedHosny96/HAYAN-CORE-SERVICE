@@ -1,0 +1,61 @@
+server:
+  port: 8030
+  error:
+    include-message: always
+sms:
+  endpoint: ${SMS-URL}
+  username: ${SMS-USERNAME}
+  password: ${SMS-PASSWORD}
+
+spring:
+  application:
+    name: HAYAAN-CORE-SERVICE
+  config:
+    import: file:env.properties
+
+  datasource:
+    url: ${DB-URL}
+    username: ${DB-USERNAME}
+    password: ${DB-PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+
+    database-platform: org.hibernate.dialect.SQLServer2012Dialect
+    show-sql: true
+  main:
+    allow-circular-references: true
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+  mail:
+    host: smtp.gmail.com
+    username: ${MAIL-USERNAME}
+    password: ${MAIL-PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls.enable: true
+jwt:
+  secret:
+
+
+
+
+
+#logging:
+#  pattern:
+#    file: '%date| %-5level | %-30thread | hijra-bank-service | %-30.30logger{0} -%line
+#      |%msg%n'
+#    console: '%date| %highlight(%-5level) | %magenta(%-30thread) | hijra-bank-service
+#      | %-30.30logger{0} -%line |%msg%n'
+#
+#  file:
+#    path: E:\Apps\hijra-bank-service\logs
+#    name: ${logging.file.path}/hijra-bank-service.log
