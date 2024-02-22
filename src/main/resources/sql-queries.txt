@@ -52,3 +52,18 @@ CREATE TABLE Users (
     CreatedDate DATETIME
 
 );
+
+
+CREATE TABLE CommissionType (
+    Id INT PRIMARY KEY IDENTITY,
+    Type NVARCHAR(255) UNIQUE
+);
+
+-- Create Commission table
+CREATE TABLE Commission (
+    Id INT PRIMARY KEY IDENTITY,
+    CommissionTypeId INT FOREIGN KEY REFERENCES CommissionType(Id),
+    Value FLOAT,
+    Agent INT FOREIGN KEY REFERENCES [User](Id),
+    Status INT
+);

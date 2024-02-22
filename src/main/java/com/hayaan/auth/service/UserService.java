@@ -115,25 +115,16 @@ public class UserService {
         userRepository.save(user);
 
         // send email
-
         Context context = new Context();
         context.setVariable("username", userDto.username());
         context.setVariable("otp", generatedPassword);
         context.setVariable("currentYear", LocalDate.now().getYear());
-
         notificationService.sendMail(userDto.email(), "Onetime password", "email-template", context);
-
         // send sms
         String smsBody = "Dear " + userDto.username() + ", your one-time password is: " + generatedPassword + " Remember to change it after login.";
-
         notificationService.sendSms(user.getPhoneNumber(), smsBody);
 
         return new CustomResponse(200, "User created successfully");
-
-//        } else {
-//            return new CustomResponse(400, "User already exists");
-//
-//        }
 
     }
 }

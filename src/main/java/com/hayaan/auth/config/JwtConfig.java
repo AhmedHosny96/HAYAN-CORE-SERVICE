@@ -1,11 +1,14 @@
 package com.hayaan.auth.config;
 
+import com.hayaan.auth.object.dto.TokenBody;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.Token;
+import org.json.JSONObject;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -54,10 +57,19 @@ public class JwtConfig {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(TokenBody tokenBody) {
         Map<String, Object> claims = new HashMap<>();
+        // Construct the user object as a map
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("userId", tokenBody.userId());
+        userMap.put("username", tokenBody.username());
+        userMap.put("role", tokenBody.role());
+        userMap.put("agentId", tokenBody.agentId());
+        userMap.put("status", tokenBody.status());
 
-        return createToken(claims, username);
+        claims.put("user", userMap);
+
+        return createToken(claims, tokenBody.username());
     }
 
     private String createToken(Map<String, Object> claims, String username) {
