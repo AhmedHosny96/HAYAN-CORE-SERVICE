@@ -29,7 +29,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] WHITE_LIST_URLS = {"/swagger-ui/**", "/bunna-api-documentation", "/api/v1/internal/**", "/error", "/api/auth/login", "/api/v1/users"};
+    private final String[] WHITE_LIST_URLS = {"/**", "/bunna-api-documentation", "/api/v1/internal/**", "/error", "/api/auth/login", "/api/v1/flight/**"};
 
     private final JwtFilter jwtFilter;
 

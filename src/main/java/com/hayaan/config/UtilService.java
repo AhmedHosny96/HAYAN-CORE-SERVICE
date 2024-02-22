@@ -1,8 +1,14 @@
 package com.hayaan.config;
 
+import com.hayaan.flight.object.dto.flight.AirInfoResponse;
+import com.hayaan.flight.object.dto.flight.PriceInfoResponse;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class UtilService {
@@ -12,6 +18,7 @@ public class UtilService {
     private static final String DIGITS = "0123456789";
 
     private static final String ALL_CHARACTERS = UPPER + LOWER + DIGITS;
+
 
     public String generatePassword(int length) {
         SecureRandom random = new SecureRandom();
@@ -24,17 +31,5 @@ public class UtilService {
         }
 
         return password.toString();
-    }
-
-    // generate email body
-
-    public String emailBody(String username, String otp) {
-        return "<html><body>"
-                + "<h2>Dear " + username + ",</h2>"
-                + "<p>Thank you for registering with us.</p>"
-                + "<p>Your one-time password is: <strong>" + otp + "</strong></p>"
-                + "<p>Please use this password to log in for the first time.</p>"
-                + "<p>Best regards,<br/>Your Application Team</p>"
-                + "</body></html>";
     }
 }

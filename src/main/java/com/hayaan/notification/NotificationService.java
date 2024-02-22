@@ -12,10 +12,14 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
+
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -36,20 +40,21 @@ public class NotificationService {
 
     private final TemplateEngine templateEngine;
 
-    public void sendMail(String toEmail, String subject, String templateName, IContext context) throws MessagingException {
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
 
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+    @Async
+    public CompletableFuture<Void> sendMail(String toEmail, String subject, String templateName, IContext context) {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
             helper.setTo(toEmail);
             helper.setSubject(subject);
             String htmlContent = templateEngine.process(templateName, context);
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            // Handle exception
+            e.printStackTrace();
         }
-
+        return CompletableFuture.completedFuture(null);
     }
 
 
