@@ -1,7 +1,9 @@
 package com.hayaan.flight.object.dto.booking;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +22,10 @@ public class TravelersDto {
     private String travelerType;
 
 
-    public class PhoneNumber {
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PhoneNumber {
         private String phoneNumber;
         private String areCode;
         private String cityCode;
@@ -30,7 +35,10 @@ public class TravelersDto {
 
     }
 
-    public class Address {
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Address {
         private String city;
         private String country;
         private String street;

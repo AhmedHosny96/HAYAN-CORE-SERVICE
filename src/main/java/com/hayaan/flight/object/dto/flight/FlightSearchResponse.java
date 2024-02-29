@@ -19,8 +19,8 @@ public class FlightSearchResponse {
     private String message;
     private String key;
     private PriceInfoResponse priceInfo;
-    private List<PassengerCriteria> passengerInfo;
     private List<AirInfoResponse> airInfo;
+    private List<PassengerCriteria> passengerInfo;
     private BaggageInfoResponse fairInfo;
 
 }

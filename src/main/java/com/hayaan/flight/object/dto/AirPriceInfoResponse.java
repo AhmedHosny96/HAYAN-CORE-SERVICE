@@ -13,10 +13,9 @@ import java.util.List;
 public class AirPriceInfoResponse {
 
     private String key;
-    private List<HostTokenResponse> hostTokenInfo;
-    private List<AirInfoResponse> airInfo;
-
-    private List<AirObjectInfo> airPriceInfo;
+    private List<HostTokenResponse> hostToken;
+    private List<AirInfoResponse> airSegment;
+    private List<AirObjectInfo> airPricingInfo;
 
     // another object which will contain key and two below objects
 

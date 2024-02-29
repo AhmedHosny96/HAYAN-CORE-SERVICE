@@ -3,6 +3,8 @@ package com.hayaan.flight.service;
 import com.hayaan.flight.object.dto.BookingInfoResponse;
 import com.hayaan.flight.object.dto.FareInfoResponse;
 import com.hayaan.flight.object.dto.HostTokenResponse;
+import com.hayaan.flight.object.dto.PassengerType;
+import com.hayaan.flight.object.dto.booking.TravelerResponse;
 import com.hayaan.flight.object.dto.flight.AirInfoResponse;
 import com.hayaan.flight.object.dto.flight.BaggageInfoResponse;
 import com.hayaan.flight.object.dto.flight.PriceInfoResponse;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class MapperService {
@@ -31,9 +35,9 @@ public class MapperService {
         String departureTimeString = departureDate.substring(departureDate.indexOf('T') + 1);
 
         return AirInfoResponse.builder()
-                .key(response.getString("key"))
-                .classOfService(response.has("classOfService") ? response.get("classOfService").toString() : null)
-                .origin(response.getString("origin"))
+                .key(response.optString("key"))
+                .classOfService(response.optString("classOfService"))
+                .origin(response.optString("origin"))
                 .destination(response.optString("destination"))
                 .carrier(response.optString("carrier"))
                 .flightNumber(response.optString("flightNumber"))
@@ -42,7 +46,7 @@ public class MapperService {
                 .arrivalTime(arrivalTimeString)
                 .departureTime(departureTimeString)
                 .arrivalDate(LocalDate.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER))
-                .FlightTime(response.optInt("flightTime"))
+                .FlightTime(response.optInt("flightTime") == 0 ? response.optInt("travelTime") : response.optInt("flightTime"))
                 .build();
 
     }
@@ -50,9 +54,9 @@ public class MapperService {
 
     public PriceInfoResponse mapToPriceInfo(JSONArray response) {
         JSONObject priceKeys = response.getJSONObject(0);
-        String currency = priceKeys.getString("totalPrice").substring(0, 3);
-        double originalPrice = Double.parseDouble(priceKeys.getString("basePrice").substring(3));
-        double taxes = Double.parseDouble(priceKeys.getString("taxes").substring(3));
+        String currency = priceKeys.optString("basePrice").substring(0, 3);
+        double originalPrice = Double.parseDouble(priceKeys.optString("basePrice").substring(3));
+        double taxes = Double.parseDouble(priceKeys.optString("taxes").substring(3));
         double commission = 100.0;
 
         double priceAfterTaxAndMarkup = originalPrice + taxes + commission;
@@ -75,8 +79,8 @@ public class MapperService {
 
         return BaggageInfoResponse
                 .builder()
-                .value(baggageINfo.getInt("value"))
-                .unit(baggageINfo.getString("unit"))
+                .value(baggageINfo.optInt("value"))
+                .unit(baggageINfo.optString("unit"))
                 .build();
 
     }
@@ -94,25 +98,72 @@ public class MapperService {
     public BookingInfoResponse mapToBookingInfo(JSONObject response) {
 
         return BookingInfoResponse.builder()
-                .bookingCode(response.getString("bookingCode"))
-                .cabinClass(response.getString("cabinClass"))
-                .segmentRef(response.getString("segmentRef"))
-                .fareInfoRef(response.getString("fareInfoRef"))
-                .hostTokenRef(response.getString("hostTokenRef"))
+                .bookingCode(response.optString("bookingCode"))
+                .cabinClass(response.optString("cabinClass"))
+                .segmentRef(response.optString("segmentRef"))
+                .fareInfoRef(response.optString("fareInfoRef"))
+                .hostTokenRef(response.optString("hostTokenRef"))
                 .build();
     }
 
     public FareInfoResponse mapToFareInfo(JSONObject fareInfoObj) {
 
         return FareInfoResponse.builder()
-                .key(fareInfoObj.getString("key"))
-                .fareBasis(fareInfoObj.getString("fareBasis"))
-                .passengerTypeCode(fareInfoObj.getString("passengerTypeCode"))
-                .origin(fareInfoObj.getString("origin"))
-                .destination(fareInfoObj.getString("destination"))
+                .key(fareInfoObj.optString("key"))
+                .fareBasis(fareInfoObj.optString("fareBasis"))
+                .passengerTypeCode(fareInfoObj.optString("passengerTypeCode"))
+                .origin(fareInfoObj.optString("origin"))
+                .destination(fareInfoObj.optString("destination"))
                 .build();
     }
 
-    //
+    // RETRIVE BOOKING MAPPINGS
+    public List<TravelerResponse> mapToTravelerResponse(JSONArray travelerArray) {
+        List<TravelerResponse> travelerResponses = new ArrayList<>();
 
+        for (int i = 0; i < travelerArray.length(); i++) {
+            JSONObject travelerObj = travelerArray.getJSONObject(i);
+
+            TravelerResponse travelerResponse = TravelerResponse.builder()
+                    .prefix(travelerObj.getJSONObject("bookingTravelerName").optString("prefix"))
+                    .firstName(travelerObj.getJSONObject("bookingTravelerName").optString("first"))
+                    .middleName(travelerObj.getJSONObject("bookingTravelerName").optString("middle"))
+                    .lastName(travelerObj.getJSONObject("bookingTravelerName").optString("last"))
+                    .suffix(travelerObj.getJSONObject("bookingTravelerName").optString("suffix"))
+                    .location(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("location"))
+                    .phoneNumber(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("number"))
+                    .build();
+
+            travelerResponses.add(travelerResponse);
+        }
+
+        return travelerResponses;
+    }
+
+    // MAP PASSENGER TYPE
+    List<PassengerType> passengerTypes = new ArrayList<>();
+
+    public List<PassengerType> mapPassengerTypes(JSONArray passengerTypeArray) {
+        List<PassengerType> passengerTypes = new ArrayList<>();
+
+        for (int i = 0; i < passengerTypeArray.length(); i++) {
+            JSONObject passengerTypeObject = passengerTypeArray.getJSONObject(i);
+
+            // Extract relevant fields from the JSON object
+            String code = passengerTypeObject.optString("code");
+            int age = passengerTypeObject.optInt("age"); // Assuming 'age' is present in the JSON object
+
+            // Create PassengerType object using the builder pattern
+            PassengerType passengerType = PassengerType.builder()
+                    .code(code)
+                    .age(age)
+                    // Add other relevant fields here
+                    .build();
+
+            // Add the created PassengerType object to the list
+            passengerTypes.add(passengerType);
+        }
+
+        return passengerTypes;
+    }
 }
