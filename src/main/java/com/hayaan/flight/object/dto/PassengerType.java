@@ -8,4 +8,5 @@ import lombok.Data;
 public class PassengerType {
 
     private String code;
+    private int age;
 }

@@ -9,6 +9,6 @@ import java.util.List;
 @Builder
 public class FlightPriceSearchDto {
 
-    private List<PassengerCriteria> passengersInfo;
+    private List<PassengerCriteria> passengerInfo;
     private List<AirInfoResponse> airInfo;
 }

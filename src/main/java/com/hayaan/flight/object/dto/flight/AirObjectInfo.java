@@ -6,6 +6,8 @@ import com.hayaan.flight.object.dto.FareInfoResponse;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -13,6 +15,6 @@ import lombok.Data;
 public class AirObjectInfo {
 
     private String key;
-    private FareInfoResponse fareInfo;
-    private BookingInfoResponse bookingInfo;
+    private List<FareInfoResponse> fareInfo;
+    private List<BookingInfoResponse> bookingInfo;
 }
