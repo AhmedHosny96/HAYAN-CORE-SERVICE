@@ -11,6 +11,7 @@ import com.hayaan.flight.repo.CommissionTypeRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -28,16 +29,15 @@ public class CommissionService {
 
     public CustomResponse createCommission(CreateCommissionDto createCommissionDto) {
 
-        CommissionType commissionType = commissionTypeRepo.findById(createCommissionDto.commissionTypeId()).orElse(null);
-        if (commissionType == null) {
+        Optional<CommissionType> byId = commissionTypeRepo.findById(createCommissionDto.commissionTypeId());
+
+        if (!byId.isPresent()) {
             return new CustomResponse(404, "CommissionType not found");
         }
 
-        var commissionTypes = commissionTypeRepo.findById(createCommissionDto.commissionTypeId()).get();
-
-
         Commission commission = Commission.builder()
-                .commissionTypeId(commissionTypes)
+                .commissionTypeId(byId.get().getId())
+                .value(createCommissionDto.value())
                 .createdAt(LocalDateTime.now())
                 .status(1)
                 .build();
@@ -51,7 +51,6 @@ public class CommissionService {
         return commissionRepo.findAll();
     }
 
-
     public CustomResponse createCommissionType(CreateCommissionTypeDto commissionTypeDto) {
         Optional<CommissionType> byType = commissionTypeRepo.findByType(commissionTypeDto.type());
         if (byType.isPresent()) {
@@ -59,6 +58,7 @@ public class CommissionService {
         }
         CommissionType commissionType = new CommissionType();
         commissionType.setType(commissionTypeDto.type());
+        commissionType.setRate(commissionTypeDto.rate());
         commissionTypeRepo.save(commissionType);
 
         return new CustomResponse(200, "CommissionType created successfully");
@@ -86,4 +86,18 @@ public class CommissionService {
     }
 
 
+    //
+    public double calculateCommission(double price) {
+        // Retrieve commission rate from the database
+        CommissionType commission = commissionTypeRepo.findFirstByOrderById();
+
+        if (commission != null) {
+            // Calculate commission based on percentage rate
+            double percentageRate = commission.getRate();
+            double commissionAmount = price * (percentageRate / 100.0);
+            return Math.round(commissionAmount * 100.0) / 100.0; // Round to 2 decimal places
+        } else {
+            throw new IllegalArgumentException("Commission rate not found in the database.");
+        }
+    }
 }

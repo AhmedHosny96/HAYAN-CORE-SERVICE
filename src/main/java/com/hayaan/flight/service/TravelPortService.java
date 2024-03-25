@@ -12,6 +12,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,8 +27,15 @@ public class TravelPortService {
 
     private final MapperService mapperService;
 
+    private final TransactionService transactionService;
+    private final CommissionService commissionService;
+
+
     @Value("${travelPort.endpoint}")
     private String TRAVELPORT_URL;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
 
     //        for (PassengerCriteria passengerCriteria : flightSearchDto.passengerCriteria()) {
 //
@@ -78,6 +88,7 @@ public class TravelPortService {
         // TWO WAY
         if (flightSearchDto.returnDate() != null) {
             JSONObject searchCriteria2 = new JSONObject();
+
             searchCriteria2.put("departureDate", flightSearchDto.returnDate());
             searchCriteria2.put("from", flightSearchDto.to());
             searchCriteria2.put("to", flightSearchDto.from());
@@ -363,7 +374,7 @@ public class TravelPortService {
 
     // BOOK FLIGHT ✅
 
-    public BookingResponse bookFlight(BookingRequestDto bookingRequestDto) {
+    public BookingResponse bookFlight(BookingRequestDto bookingRequestDto, LocalDate returnDate) {
         JSONObject mainRequestBody = new JSONObject();
 
         // Construct travelers array
@@ -404,17 +415,16 @@ public class TravelPortService {
 
         log.info("AIR PRIC SOLUTION", bookingRequestDto.getAirPriceInfo());
 
-
         mainRequestBody.put("airPricingSolution", bookingRequestDto.getAirPriceInfo());
 
         // Construct formOfPayment array
         JSONArray formOfPaymentArray = new JSONArray();
-        for (FormOfPaymentDto formOfPayment : bookingRequestDto.getFormOfPayment()) {
-            JSONObject formOfPaymentObject = new JSONObject();
-            formOfPaymentObject.put("isCash", formOfPayment.getIsCash());
-            formOfPaymentObject.put("key", formOfPayment.getKey());
-            formOfPaymentArray.put(formOfPaymentObject);
-        }
+
+        JSONObject formOfPaymentObject = new JSONObject();
+        formOfPaymentObject.put("isCash", "true");
+        formOfPaymentObject.put("key", "1");
+        formOfPaymentArray.put(formOfPaymentObject);
+
 
         mainRequestBody.put("formOfPayment", formOfPaymentArray);
 
@@ -434,10 +444,27 @@ public class TravelPortService {
 
         }
 
+//        if (flightBookingResponse.has("responseMessage")) {
+//
+//            var errorObject = flightBookingResponse.optJSONObject("responseMessage");
+//            return BookingResponse.builder()
+//                    .status(400)
+//                    .message(errorObject.getString("value"))
+//                    .build();
+//
+//        }
+
+        log.info("BOOKING REPSONSE : {}", flightBookingResponse);
+
         String transactionId = flightBookingResponse.optString("transactionId");
 
-        JSONObject universalRecordObj = flightBookingResponse.getJSONObject("universalRecord");
+        JSONObject universalRecordObj = flightBookingResponse.optJSONObject("universalRecord");
 
+        JSONArray airReservation = universalRecordObj.getJSONArray("airReservation");
+
+        JSONObject airSegment = airReservation.getJSONObject(0).getJSONArray("airSegment").getJSONObject(0);
+
+        // BOOKING INFO MAP
         BookingResponse.BookingDetails bookingDetails = BookingResponse.BookingDetails.builder()
                 .pnrCode(universalRecordObj.optString("locatorCode"))
                 .transactionId(transactionId)
@@ -445,15 +472,57 @@ public class TravelPortService {
                 .status(universalRecordObj.optString("status"))
                 .build();
 
+        // PRICE INFO MAP
+
+        JSONArray airPricingInfoObj = airReservation.getJSONObject(0).getJSONArray("airPricingInfo");
+
+        PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
+
+        // calculate commision
+
+        double commission = commissionService.calculateCommission(priceInfoResponse.getOriginalPrice());
+
+        // save ticket history ,
+
+        List<TravelersDto> travelers = bookingRequestDto.getTravelers();
+
+        TicketHistoryDto ticketHistory = TicketHistoryDto.builder()
+                .pnr(bookingDetails.getPnrCode())
+                .origin(airSegment.optString("origin"))
+                .destination(airSegment.optString("destination"))
+                .airlineId(airSegment.optString("carrier"))
+                .airTransactionId(transactionId)
+                .travelDate(LocalDateTime.parse(airSegment.optString("departureTime"), DATE_TIME_FORMATTER))
+
+//                .returnDate(returnDate)
+                .ticketAmount(priceInfoResponse.getOriginalPrice())
+                .commissionAmount(commission)
+                .firstName(travelers.get(0).getFirstName())
+                .middleName(travelers.get(0).getMiddleName())
+                .lastName(travelers.get(0).getLastName())
+                .userType("A")
+                .phoneNumber(travelers.get(0).getPhoneNumber().get(0).getPhoneNumber())
+                .email(travelers.get(0).getEmail())
+
+                .build();
+
+        transactionService.saveTicket(ticketHistory);
+
+        // stage payment
+        PaymentStageDto paymentStageDto = PaymentStageDto.builder()
+                .amount(priceInfoResponse.getOriginalPrice())
+//                .payerAccount(travelers.get(0).getPhoneNumber().get(0).getPhoneNumber())
+                .pnr(bookingDetails.getPnrCode())
+                .build();
+
+        transactionService.stagePayment(paymentStageDto);
+
         return BookingResponse.builder()
                 .status(200)
                 .message("success")
                 .bookingInfo(List.of(bookingDetails))
                 .build();
-
-
     }
-
     // GET BOOKING BY PNR CODE
 
     public FlightByPnrCodeResponse findFlightByPnr(String pnrCode) {
@@ -527,7 +596,6 @@ public class TravelPortService {
         List<PassengerType> passengerTypeList = mapperService.mapPassengerTypes(passengerType);
 
 //        PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
-
         return FlightByPnrCodeResponse.builder()
                 .status(200)
                 .message("success")

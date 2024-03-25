@@ -22,6 +22,10 @@ public class CommissionType {
     private int id;
     @Column(name = "Type", unique = true)
     private String type;
+
+    @Column(name = "Rate")
+    private Double rate;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;

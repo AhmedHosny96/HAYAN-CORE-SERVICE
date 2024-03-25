@@ -67,3 +67,50 @@ CREATE TABLE Commission (
     Agent INT FOREIGN KEY REFERENCES [User](Id),
     Status INT
 );
+
+-- create ticket history table
+
+CREATE TABLE [dbo].[TicketHistory] (
+    [id] INT PRIMARY KEY IDENTITY(1,1),
+    [UserId] BIGINT,
+    [PNR] NVARCHAR(255) UNIQUE,
+    [Origin] NVARCHAR(255),
+    [Destination] NVARCHAR(255),
+    [TicketAmount] FLOAT,
+    [TravelDate] DATETIME,
+    [ReturnDate] DATE,
+    [AirlineId] NVARCHAR(255),
+    [AirTransactionId] NVARCHAR(255),
+    [PaymentDate] DATETIME,
+    [PaymentMethod] NVARCHAR(50),
+    [PaymentReference] NVARCHAR(100) UNIQUE,
+    [FirstName] NVARCHAR(100),
+    [MiddleName] NVARCHAR(100),
+    [LastName] NVARCHAR(100),
+    [Email] NVARCHAR(255),
+    [PhoneNumber] NVARCHAR(20),
+    [UserType] NVARCHAR(50),
+    [Document] NVARCHAR(255),
+    [documentIdNumber] NVARCHAR(50),
+    [DateOfIssue] DATETIME,
+    [ExpiryDate] DATETIME,
+    [CreatedDate] DATETIME,
+    [Status] INT
+);
+
+CREATE TABLE Payment (
+                          id INT PRIMARY KEY IDENTITY ,
+                          Pnr VARCHAR(10),
+                          Amount DECIMAL(10, 2),
+                          PaymentMode VARCHAR(25),
+                          PaymentReference VARCHAR(25),
+                          PaymentDate DATETIME,
+                          RequestBody TEXT,
+                          ResponseBody TEXT,
+                          Response TEXT,
+                          UserType VARCHAR(5),
+                          UserId INT,
+                          PaymentStatus VARCHAR(20),
+                          CreatedAt DATETIME,
+                          UpdatedAt DATETIME
+);
