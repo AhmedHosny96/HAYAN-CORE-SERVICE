@@ -9,27 +9,25 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 @Service
 public class UtilService {
 
-    private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String LOWER = UPPER.toLowerCase();
-    private static final String DIGITS = "0123456789";
+    public String generatePassword() {
+        String characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        int length = 8;
 
-    private static final String ALL_CHARACTERS = UPPER + LOWER + DIGITS;
+        StringBuilder otp = new StringBuilder();
 
+        Random random = new Random();
 
-    public String generatePassword(int length) {
-        SecureRandom random = new SecureRandom();
-        StringBuilder password = new StringBuilder();
-
-        // Add random characters to the password
         for (int i = 0; i < length; i++) {
-            int randomIndex = random.nextInt(ALL_CHARACTERS.length());
-            password.append(ALL_CHARACTERS.charAt(randomIndex));
+            int index = random.nextInt(characters.length());
+
+            otp.append(characters.charAt(index));
         }
 
-        return password.toString();
+        return otp.toString();
     }
 }

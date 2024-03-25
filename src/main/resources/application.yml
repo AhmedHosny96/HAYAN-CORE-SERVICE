@@ -1,0 +1,44 @@
+server:
+  port: 8030
+
+servers:
+  test-url: http://localhost:8030
+  prod-url: http://196.188.172.182:8030
+
+spring:
+  application:
+    name: HAYAN-CORE-SERIVCE
+  main:
+    allow-circular-references: true
+  config:
+    import: file:env.properties
+  datasource:
+    url: ${DB-URL}
+    username: ${DB-USERNAME}
+    password: ${DB-PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  mail:
+    host: smtp.google.com
+    username: ${MAIL-USERNAME}
+    password: ${MAIL-PASSWORD}
+  jpa:
+    hibernate:
+      #      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+sms:
+  endpoint: ${SMS-URL}
+  username: ${SMS-USERNAME}
+  password: ${SMS-PASSWORD}
+
+travelPort:
+  endpoint: http://localhost:8080/api/adapter
+
+flightLogic:
+  endpoint: http://196.188.172.182:8080/hayaan/process
+
+payment:
+  endpoint: https://196.188.172.182:8154/api/v1/payment/request

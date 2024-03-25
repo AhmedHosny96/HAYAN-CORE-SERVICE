@@ -102,7 +102,7 @@ public class AgentService {
         return new CustomResponse(200, "AgentType updated successfully");
     }
 
-    // AGENT STATUS CHANGE 0/1
+    // AGENT STATUS CHANGE 0/1 ->
     public CustomResponse changeAgentStatus(AgentStatusChangeDto statusChangeDto) {
         Optional<Agent> optionalAgent = agentRepo.findById(statusChangeDto.agentId());
         if (optionalAgent.isPresent()) {

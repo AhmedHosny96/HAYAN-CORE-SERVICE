@@ -76,11 +76,7 @@ public class UserService {
     // USERS
     public CustomResponse createUser(CreateUserDto userDto) throws MessagingException {
 
-//        Optional<User> byUsernameOrEmailOrPhoneNumber = userRepository.findByUsernameOrEmailOrPhoneNumber(userDto.username(), userDto.email(), userDto.phoneNumber());
-
-//        if (!byUsernameOrEmailOrPhoneNumber.isPresent()) {
-
-        String generatedPassword = utilService.generatePassword(8);
+        String generatedPassword = utilService.generatePassword();
 
         log.info("GENERATED PASSWORD : {}", generatedPassword);
         String hashedPassword = passwordEncoder.encode(generatedPassword);

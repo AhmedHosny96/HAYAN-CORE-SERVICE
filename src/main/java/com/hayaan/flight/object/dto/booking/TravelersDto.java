@@ -12,14 +12,18 @@ import java.util.List;
 @Builder
 public class TravelersDto {
 
+    private String title;
     private String firstName;
     private String middleName;
     private String lastName;
     private String gender;
     private LocalDate dateOfBirth;
     private List<PhoneNumber> phoneNumber;
+    private String email;
     private Address address;
     private String travelerType;
+    private String idNo;
+    private String nationality;
 
 
     @Data

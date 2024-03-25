@@ -1,7 +1,6 @@
 package com.hayaan.config;
 
 
-import io.jsonwebtoken.Header;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -12,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import javax.net.ssl.SSLException;
-import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,7 +31,7 @@ public class AsyncHttpConfig {
                 .setCompressionEnforced(true)
                 .setMaxConnections(100)
                 .setPooledConnectionIdleTimeout(20000)
-                .setRequestTimeout(20000)
+                .setRequestTimeout(50000)
                 .setMaxConnectionsPerHost(5000)
                 .setSslContext(sc)
                 .build();
@@ -50,17 +48,17 @@ public class AsyncHttpConfig {
             CompletableFuture<Response> responseFuture = asyncHttpClient.executeRequest(request).toCompletableFuture();
             Response response = responseFuture.join(); // Wait for completion and get the response
 
-            log.info("Response body: {}", response.getResponseBody());
+//            log.info("Response body: {}", response.getResponseBody());
 
             try {
-                log.info("Received [HttpStatus = {}, Body = {}, URL = {}] processing halted!",
-                        response.getStatusCode(), response.getResponseBody(), request);
+//                log.info("Received [HttpStatus = {}, Body = {}, URL = {}] processing halted!",
+//                        response.getStatusCode(), response.getResponseBody(), request);
                 responseBody.set(new JSONObject(response.getResponseBody()));
             } catch (Exception e) {
                 log.error("JSON Processing failed: [Message= {}]", e.getMessage());
             }
         } catch (Exception e) {
-            log.error("Micro-Service Sending Failed: [Message= {}]", e.getMessage());
+            log.error("API REQUEST FAILED : [Message= {}]", e.getMessage());
         }
 
         return responseBody.get();

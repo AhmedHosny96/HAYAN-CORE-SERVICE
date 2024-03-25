@@ -8,6 +8,7 @@ import com.hayaan.flight.object.dto.booking.TravelerResponse;
 import com.hayaan.flight.object.dto.flight.AirInfoResponse;
 import com.hayaan.flight.object.dto.flight.BaggageInfoResponse;
 import com.hayaan.flight.object.dto.flight.PriceInfoResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 public class MapperService {
 
 
@@ -62,8 +64,8 @@ public class MapperService {
         double priceAfterTaxAndMarkup = originalPrice + taxes + commission;
 
         PriceInfoResponse priceInfoResponse = PriceInfoResponse.builder()
-                .originalPrice(originalPrice)
-                .taxes(taxes)
+                .originalPrice(originalPrice + taxes)
+//                .taxes(taxes)
                 .commission(commission)
                 .priceAfterTaxAndCommission(priceAfterTaxAndMarkup)
                 .currency(currency)
@@ -165,5 +167,56 @@ public class MapperService {
         }
 
         return passengerTypes;
+    }
+
+
+    // FLIGHT LOGIC MAPPERS
+
+    public AirInfoResponse[] mapToFareItineraries(JSONArray fareItineraries, String sessionId) {
+        AirInfoResponse[] responses = new AirInfoResponse[fareItineraries.length()];
+
+        for (int i = 0; i < fareItineraries.length(); i++) {
+            JSONObject fareItinerary = fareItineraries.getJSONObject(i).getJSONObject("FareItinerary");
+            JSONObject airItineraryFareInfo = fareItinerary.getJSONObject("AirItineraryFareInfo");
+
+            JSONObject totalFare = airItineraryFareInfo.optJSONObject("ItinTotalFares").optJSONObject("TotalFare");
+
+            JSONArray originDestinationOptions = fareItinerary.optJSONArray("OriginDestinationOptions");
+            JSONArray originDestinationOption = fareItinerary.optJSONArray("OriginDestinationOptions").optJSONObject(0).optJSONArray("OriginDestinationOption");
+
+            int totalStops = originDestinationOptions.optJSONObject(0).optInt("TotalStops");
+
+            JSONObject flightSegment = originDestinationOption.optJSONObject(0).optJSONObject("FlightSegment");
+
+            JSONObject seatsRemaining = originDestinationOption.optJSONObject(0).optJSONObject("SeatsRemaining");
+            
+            String departureDateTime = flightSegment.getString("DepartureDateTime");
+            String arrivalDateTime = flightSegment.getString("ArrivalDateTime");
+
+            AirInfoResponse response = new AirInfoResponse();
+//            response.setKey(fareItinerary.getString("ResultIndex"));
+            response.setCarrier(flightSegment.getString("MarketingAirlineCode"));
+            response.setFlightNumber(flightSegment.getString("FlightNumber"));
+            response.setEquipment(flightSegment.getJSONObject("OperatingAirline").getString("Equipment"));
+            response.setFlightTime(flightSegment.getInt("JourneyDuration"));
+            response.setDepartureDate(LocalDate.parse(departureDateTime.substring(0, 10)));
+            response.setDepartureTime(departureDateTime.substring(11, 16));
+            response.setArrivalDate(LocalDate.parse(arrivalDateTime.substring(0, 10)));
+            response.setArrivalTime(arrivalDateTime.substring(11, 16));
+            response.setOrigin(flightSegment.getString("DepartureAirportLocationCode"));
+            response.setDestination(flightSegment.getString("ArrivalAirportLocationCode"));
+            response.setClassOfService(flightSegment.getString("CabinClassCode"));
+            response.setFareSourceCode(airItineraryFareInfo.getString("FareSourceCode"));
+            response.setIsRefundable(airItineraryFareInfo.getString("IsRefundable").equalsIgnoreCase("Yes"));
+            response.setCurrency(totalFare.optString("CurrencyCode"));
+            response.setTotalAmount(totalFare.optDouble("Amount"));
+            response.setSessionId(sessionId);
+            response.setTotalStops(totalStops);
+            response.setRemainingSeats(seatsRemaining.optInt("Number"));
+
+            responses[i] = response;
+        }
+
+        return responses;
     }
 }

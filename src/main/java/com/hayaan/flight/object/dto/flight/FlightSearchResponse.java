@@ -18,6 +18,7 @@ public class FlightSearchResponse {
     private int status;
     private String message;
     private String key;
+//    private String sessionId;
     private PriceInfoResponse priceInfo;
     private List<AirInfoResponse> airInfo;
     private List<PassengerCriteria> passengerInfo;

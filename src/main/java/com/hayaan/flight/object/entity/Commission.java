@@ -21,16 +21,15 @@ public class Commission {
     @Column(name = "Id")
     private Integer id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Type", referencedColumnName = "Id")
-    private CommissionType commissionTypeId;
+    @Column(name = "CommissionTypeId")
+    private Integer commissionTypeId;
 
 
     @Column(name = "Value")
     private Double value;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Agent", referencedColumnName = "Id")
+    @JoinColumn(name = "Id", referencedColumnName = "Id")
     private User createdBy;
     @Column(name = "Status")
     private Integer status;

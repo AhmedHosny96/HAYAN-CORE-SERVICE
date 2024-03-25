@@ -1,5 +1,6 @@
 package com.hayaan.flight.repo;
 
+import com.hayaan.flight.object.entity.Commission;
 import com.hayaan.flight.object.entity.CommissionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,4 +12,5 @@ public interface CommissionTypeRepo extends JpaRepository<CommissionType, Intege
 
     Optional<CommissionType> findByType(String type);
 
+    CommissionType findFirstByOrderById();
 }
