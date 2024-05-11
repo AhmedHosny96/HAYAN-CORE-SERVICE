@@ -18,6 +18,8 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+
 public class CommissionController {
 
     private final CommissionService commissionService;
@@ -35,6 +37,7 @@ public class CommissionController {
     }
 
     @PostMapping("/commission-types")
+
     public ResponseEntity<CustomResponse> createCommissionType(@RequestBody CreateCommissionTypeDto commissionTypeDto) {
         CustomResponse response = commissionService.createCommissionType(commissionTypeDto);
         return ResponseEntity.status(response.status()).body(response);

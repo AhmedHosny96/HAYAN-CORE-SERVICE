@@ -1,13 +1,15 @@
 package com.hayaan.flight.service;
 
-import com.hayaan.flight.object.dto.BookingInfoResponse;
-import com.hayaan.flight.object.dto.FareInfoResponse;
-import com.hayaan.flight.object.dto.HostTokenResponse;
-import com.hayaan.flight.object.dto.PassengerType;
+import com.hayaan.config.UtilService;
+import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.dto.booking.TravelerResponse;
 import com.hayaan.flight.object.dto.flight.AirInfoResponse;
 import com.hayaan.flight.object.dto.flight.BaggageInfoResponse;
+import com.hayaan.flight.object.dto.flight.OnwardJourneyResponse;
 import com.hayaan.flight.object.dto.flight.PriceInfoResponse;
+import com.hayaan.flight.object.entity.Airport;
+import com.hayaan.flight.repo.AirportRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,10 +22,17 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class MapperService {
 
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+
+    private final AirportRepository airportRepository;
+
+    private final AirDetailsService airDetailsService;
+
+    private final UtilService utilService;
 
 
     // FLIGHT SEARCH MAPPINGS
@@ -41,14 +50,15 @@ public class MapperService {
                 .classOfService(response.optString("classOfService"))
                 .origin(response.optString("origin"))
                 .destination(response.optString("destination"))
-                .carrier(response.optString("carrier"))
+                .airlineName(response.optString("carrier"))
                 .flightNumber(response.optString("flightNumber"))
                 .equipment(response.optString("equipment"))
                 .departureDate(LocalDate.parse(response.optString("departureTime"), DATE_TIME_FORMATTER))
                 .arrivalTime(arrivalTimeString)
                 .departureTime(departureTimeString)
                 .arrivalDate(LocalDate.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER))
-                .FlightTime(response.optInt("flightTime") == 0 ? response.optInt("travelTime") : response.optInt("flightTime"))
+                .flightDuration(response.optInt("flightTime") == 0 ? utilService.convertStringToDuration(response.optInt("travelTime")) :
+                        utilService.convertStringToDuration(response.optInt("flightTime")))
                 .build();
 
     }
@@ -172,11 +182,14 @@ public class MapperService {
 
     // FLIGHT LOGIC MAPPERS
 
-    public AirInfoResponse[] mapToFareItineraries(JSONArray fareItineraries, String sessionId) {
-        AirInfoResponse[] responses = new AirInfoResponse[fareItineraries.length()];
+    public List<AirInfoResponse> mapToFareItineraries(JSONArray fareItineraries, String sessionId, String origin, String destination) {
+        List<AirInfoResponse> airInfoList = new ArrayList<>();
 
         for (int i = 0; i < fareItineraries.length(); i++) {
             JSONObject fareItinerary = fareItineraries.getJSONObject(i).getJSONObject("FareItinerary");
+
+            String airlineLogoUrl = fareItinerary.optString("AirlineLogo");
+
             JSONObject airItineraryFareInfo = fareItinerary.getJSONObject("AirItineraryFareInfo");
 
             JSONObject totalFare = airItineraryFareInfo.optJSONObject("ItinTotalFares").optJSONObject("TotalFare");
@@ -186,37 +199,71 @@ public class MapperService {
 
             int totalStops = originDestinationOptions.optJSONObject(0).optInt("TotalStops");
 
-            JSONObject flightSegment = originDestinationOption.optJSONObject(0).optJSONObject("FlightSegment");
+            AirInfoResponse airInfoResponse = new AirInfoResponse();
+            ArrayList<TransitDetails> transitList = new ArrayList<>();
 
-            JSONObject seatsRemaining = originDestinationOption.optJSONObject(0).optJSONObject("SeatsRemaining");
-            
-            String departureDateTime = flightSegment.getString("DepartureDateTime");
-            String arrivalDateTime = flightSegment.getString("ArrivalDateTime");
+            int totalJourneyTime = 0; // Initialize total journey time
 
-            AirInfoResponse response = new AirInfoResponse();
-//            response.setKey(fareItinerary.getString("ResultIndex"));
-            response.setCarrier(flightSegment.getString("MarketingAirlineCode"));
-            response.setFlightNumber(flightSegment.getString("FlightNumber"));
-            response.setEquipment(flightSegment.getJSONObject("OperatingAirline").getString("Equipment"));
-            response.setFlightTime(flightSegment.getInt("JourneyDuration"));
-            response.setDepartureDate(LocalDate.parse(departureDateTime.substring(0, 10)));
-            response.setDepartureTime(departureDateTime.substring(11, 16));
-            response.setArrivalDate(LocalDate.parse(arrivalDateTime.substring(0, 10)));
-            response.setArrivalTime(arrivalDateTime.substring(11, 16));
-            response.setOrigin(flightSegment.getString("DepartureAirportLocationCode"));
-            response.setDestination(flightSegment.getString("ArrivalAirportLocationCode"));
-            response.setClassOfService(flightSegment.getString("CabinClassCode"));
-            response.setFareSourceCode(airItineraryFareInfo.getString("FareSourceCode"));
-            response.setIsRefundable(airItineraryFareInfo.getString("IsRefundable").equalsIgnoreCase("Yes"));
-            response.setCurrency(totalFare.optString("CurrencyCode"));
-            response.setTotalAmount(totalFare.optDouble("Amount"));
-            response.setSessionId(sessionId);
-            response.setTotalStops(totalStops);
-            response.setRemainingSeats(seatsRemaining.optInt("Number"));
+            for (int j = 0; j < originDestinationOption.length(); j++) {
+                JSONObject flightSegment = originDestinationOption.optJSONObject(j).optJSONObject("FlightSegment");
+                totalJourneyTime += flightSegment.getInt("JourneyDuration"); // Add current segment's journey time to total
 
-            responses[i] = response;
+                if (j > 0) {
+                    Airport airportByAirportCode = airportRepository.findAirportByAirportCode(flightSegment.optString("DepartureAirportLocationCode")).get();
+
+                    var transitDetail = new TransitDetails();
+                    transitDetail.setAirportCode(airportByAirportCode.getAirportCode());
+                    transitDetail.setCity(airportByAirportCode.getCity());
+                    transitDetail.setCountry(airportByAirportCode.getCountry());
+
+                    transitList.add(transitDetail);
+                }
+
+                if (j == originDestinationOption.length() - 1) {
+
+
+                    airInfoResponse.setAirlineName(flightSegment.getString("MarketingAirlineName"));
+                    airInfoResponse.setFlightNumber(flightSegment.getString("MarketingAirlineCode") + flightSegment.getString("FlightNumber"));
+                    airInfoResponse.setEquipment(flightSegment.getJSONObject("OperatingAirline").getString("Equipment"));
+                    airInfoResponse.setFlightDuration(utilService.convertStringToDuration(flightSegment.getInt("JourneyDuration")));
+                    airInfoResponse.setDepartureDate(LocalDate.parse(flightSegment.getString("DepartureDateTime").substring(0, 10)));
+                    airInfoResponse.setDepartureTime(flightSegment.getString("DepartureDateTime").substring(11, 16));
+                    airInfoResponse.setArrivalDate(LocalDate.parse(flightSegment.getString("ArrivalDateTime").substring(0, 10)));
+                    airInfoResponse.setArrivalTime(flightSegment.getString("ArrivalDateTime").substring(11, 16));
+                    airInfoResponse.setClassOfService(flightSegment.getString("CabinClassCode"));
+
+                    JSONObject seatsRemaining = originDestinationOption.optJSONObject(j).optJSONObject("SeatsRemaining");
+                    airInfoResponse.setRemainingSeats(seatsRemaining.optInt("Number"));
+                }
+            }
+
+            // get origin and destination fullname
+
+            String originAirportName = airDetailsService.getAirportNameByCode(origin).getAirportName();
+            String destinationAirportName = airDetailsService.getAirportNameByCode(destination).getAirportName();
+
+
+            String originAirportCity = airDetailsService.getAirportNameByCode(origin).getCity();
+            String destinationAirportCity = airDetailsService.getAirportNameByCode(destination).getCity();
+
+
+            airInfoResponse.setTransitFlight(transitList);
+            airInfoResponse.setFlightDuration(utilService.convertStringToDuration(totalJourneyTime)); // Set total journey time
+            airInfoResponse.setSessionId(sessionId);
+            airInfoResponse.setTotalStops(totalStops);
+            airInfoResponse.setOrigin(originAirportCity);
+            airInfoResponse.setDestination(destinationAirportCity);
+            airInfoResponse.setFareSourceCode(airItineraryFareInfo.getString("FareSourceCode"));
+            airInfoResponse.setIsRefundable(airItineraryFareInfo.getString("IsRefundable").equalsIgnoreCase("Yes"));
+            airInfoResponse.setCurrency(totalFare.optString("CurrencyCode"));
+            airInfoResponse.setTotalAmount(totalFare.optDouble("Amount"));
+            airInfoResponse.setAirlineLogoUrl(airlineLogoUrl);
+
+            airInfoList.add(airInfoResponse);
         }
 
-        return responses;
+        return airInfoList;
     }
+
+
 }
