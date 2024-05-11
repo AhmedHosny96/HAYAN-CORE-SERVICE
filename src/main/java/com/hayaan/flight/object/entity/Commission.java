@@ -21,18 +21,29 @@ public class Commission {
     @Column(name = "Id")
     private Integer id;
 
-    @Column(name = "CommissionTypeId")
-    private Integer commissionTypeId;
+    @Column(name = "AgentId")
+    private Integer agentId;
 
 
-    @Column(name = "Value")
-    private Double value;
+    @Column(name = "Amount")
+    private Double amount;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Id", referencedColumnName = "Id")
     private User createdBy;
+
     @Column(name = "Status")
     private Integer status;
+
+    @Column(name = "FlightType")
+    private Integer flightType;
+
+    @Column(name = "ClassType")
+    private Integer classType;
+
+//    FlightType INT,
+//    ClassType INT,
+//    CreatedDate DATETIME2,
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false, updatable = false)

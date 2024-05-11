@@ -14,14 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+
 public class AuthController {
 
     private final JwtConfig jwtService;
@@ -53,7 +52,7 @@ public class AuthController {
         Role role = roleRepo.findById(currentUser.getRole().getId()).get();
 
         var tokenBody = new TokenBody(currentUser.getUsername(), role.getName(), currentUser.getId(), currentUser.getAgent().getId(), currentUser.getStatus());
-        
+
         String token = jwtService.generateToken(tokenBody);
 
         var customResponse = new AuthResponse(

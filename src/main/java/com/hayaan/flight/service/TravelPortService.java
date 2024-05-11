@@ -1,9 +1,12 @@
 package com.hayaan.flight.service;
 
 import com.hayaan.config.AsyncHttpConfig;
+import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.dto.booking.*;
 import com.hayaan.flight.object.dto.flight.*;
+import com.hayaan.flight.object.entity.TicketHistory;
+import com.hayaan.flight.repo.TicketHistoryRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.RequestBuilder;
@@ -12,7 +15,6 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,6 +31,8 @@ public class TravelPortService {
 
     private final TransactionService transactionService;
     private final CommissionService commissionService;
+
+    private final TicketHistoryRepo ticketHistoryRepo;
 
 
     @Value("${travelPort.endpoint}")
@@ -208,7 +212,7 @@ public class TravelPortService {
         if (flightPriceSearchDto.getAirInfo() != null) {
             for (AirInfoResponse airSegment : flightPriceSearchDto.getAirInfo()) {
                 JSONObject airSegmentObj = new JSONObject();
-                airSegmentObj.put("carrier", airSegment.getCarrier());
+                airSegmentObj.put("carrier", airSegment.getAirlineName());
                 airSegmentObj.put("flightNumber", airSegment.getFlightNumber());
                 airSegmentObj.put("equipment", airSegment.getEquipment());
                 airSegmentObj.put("departureDate", airSegment.getDepartureDate());
@@ -374,7 +378,7 @@ public class TravelPortService {
 
     // BOOK FLIGHT ✅
 
-    public BookingResponse bookFlight(BookingRequestDto bookingRequestDto, LocalDate returnDate) {
+    public BookingResponse bookFlight(BookingRequestDto bookingRequestDto) {
         JSONObject mainRequestBody = new JSONObject();
 
         // Construct travelers array
@@ -573,14 +577,10 @@ public class TravelPortService {
 
         log.info("AIR RESERVATION: {}", airReservation);
 
-//        JSONArray airPricingInfoObj = airReservation.getJSONArray("airPricingInfoObj");
-
         JSONArray airPricingInfoObj = airReservation.getJSONObject(0).getJSONArray("airPricingInfo");
 
 
         JSONArray bookingInfo = airPricingInfoObj.getJSONObject(0).getJSONArray("bookingInfo");
-
-//        JSONObject airPriceInfo = airPricingInfoObj.getJSONObject(0);
 
         PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
 
@@ -608,5 +608,43 @@ public class TravelPortService {
                 .airInfo(List.of(airInfoResponse))
                 .passengerInfo(passengerTypeList)
                 .build();
+    }
+
+
+    // TODO: locatorCodeCode to be changed after fix from ivan
+
+    public CustomResponse cancelFlight(String pnrCode) {
+
+        var requestBody = new JSONObject();
+        requestBody.put("UniqueID", pnrCode);
+        requestBody.put("operation", "CancelTrip");
+
+        log.info("CANCEL FLIGHT : {}", requestBody);
+
+        RequestBuilder requestBuilder = new RequestBuilder("POST")
+                .setUrl(TRAVELPORT_URL + "/cancel")
+                .setBody(requestBody.toString());
+
+        JSONObject flightRetrieveResponse = asyncHttp.sendRequest(requestBuilder);
+
+        log.info("CANCEL FLIGHT RESPONSE : {}", flightRetrieveResponse);
+
+        // MAP ERROR RESPONSE
+
+        if (flightRetrieveResponse.has("status")) {
+            return new CustomResponse(400, flightRetrieveResponse.optString("details"));
+        }
+
+        // UPDATE THE FLIGHT DETAILS
+
+        TicketHistory ticketHistory = ticketHistoryRepo.findByPnr(pnrCode)
+                .get();
+
+        ticketHistory.setStatus(3);
+        ticketHistory.setStatusDesc("CANCELLED");
+        ticketHistoryRepo.save(ticketHistory);
+
+
+        return new CustomResponse(200, "Flight Cancelled successfully");
     }
 }

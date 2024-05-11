@@ -95,4 +95,7 @@ public class TicketHistory {
     @Column(name = "Status")
     private Integer status; // 0 booking is active payment not made , 1 , booking active payment made , 2 cancelled , 3 cancelled and refunded
 
+    @Column(name = "StatusDesc")
+    private String statusDesc;
+
 }

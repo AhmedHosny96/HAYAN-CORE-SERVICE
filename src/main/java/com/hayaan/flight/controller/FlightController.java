@@ -30,6 +30,8 @@ import java.time.LocalDate;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+
 //@Tag(name = "Flight Booking APIs", description = "Flight Management APIs")
 public class FlightController {
 
@@ -60,7 +62,6 @@ public class FlightController {
         return new ResponseEntity<>(allAirlines, HttpStatusCode.valueOf(allAirlines.getStatus()));
     }
 
-
     @GetMapping("/flight/confirm-ticket")
     @Tag(name = "Flight Booking", description = "Confirm ticket booking")
     public ResponseEntity<CustomResponse> confirmTicket(@RequestParam("pnrCode") String pnrCode) {
@@ -68,8 +69,15 @@ public class FlightController {
         return new ResponseEntity<>(confirmTicketResponse, HttpStatusCode.valueOf(confirmTicketResponse.status()));
     }
 
+    @GetMapping("/flight/cancel")
+    @Tag(name = "Flight cancel", description = "Cancel ticket ")
+    public ResponseEntity<CustomResponse> cancelFlight(@RequestParam("pnrCode") String pnrCode) {
+        CustomResponse confirmTicketResponse = travelPortService.cancelFlight(pnrCode);
+        return new ResponseEntity<>(confirmTicketResponse, HttpStatusCode.valueOf(confirmTicketResponse.status()));
+    }
 
-    @GetMapping("/flight")
+
+    @GetMapping("/flight") // confirms ticket in travel port
     @Tag(name = "Flight Details", description = "Retrieve flight details by PNR code")
     public ResponseEntity<FlightByPnrCodeResponse> getFlightByPnrCode(@RequestParam("pnrCode") String pnrCode) {
         FlightByPnrCodeResponse flightByPnr = travelPortService.findFlightByPnr(pnrCode);
@@ -83,8 +91,7 @@ public class FlightController {
         FlightSearchResponse flightSearchResponse = flightLogicService.searchFlight(flightSearchDto);
         return new ResponseEntity<>(flightSearchResponse, HttpStatusCode.valueOf(flightSearchResponse.getStatus()));
     }
-
-
+    
     @PostMapping("/flight/detail")
     @Tag(name = "Flight Detail", description = "Search single flight detail")
     public ResponseEntity<AirPriceSolution> searchFlight(@RequestBody FlightPriceSearchDto flightSearchDto) {
@@ -95,7 +102,7 @@ public class FlightController {
     @PostMapping("/flight/booking")
     @Tag(name = "Flight Booking", description = "Book a flight")
     public ResponseEntity<?> bookFlight(@RequestBody BookingRequestDto bookingRequestDto) {
-        BookingResponse bookingResponse = flightLogicService.bookFlight(bookingRequestDto);
+        BookingResponse bookingResponse = travelPortService.bookFlight(bookingRequestDto);
         return new ResponseEntity<>(bookingResponse, HttpStatusCode.valueOf(bookingResponse.getStatus()));
     }
 

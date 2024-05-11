@@ -42,3 +42,8 @@ flightLogic:
 
 payment:
   endpoint: https://196.188.172.182:8154/api/v1/payment/request
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG

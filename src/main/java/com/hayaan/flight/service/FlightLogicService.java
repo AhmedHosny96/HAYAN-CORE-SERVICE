@@ -12,7 +12,12 @@ import com.hayaan.flight.object.dto.booking.TravelersDto;
 import com.hayaan.flight.object.dto.flight.AirInfoResponse;
 import com.hayaan.flight.object.dto.flight.FlightSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchResponse;
+import com.hayaan.flight.object.dto.flight.OnwardJourneyResponse;
+import com.hayaan.flight.object.entity.Airline;
+import com.hayaan.flight.object.entity.Airport;
 import com.hayaan.flight.object.entity.Payment;
+import com.hayaan.flight.repo.AirlineRepository;
+import com.hayaan.flight.repo.AirportRepository;
 import com.hayaan.flight.repo.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +25,12 @@ import org.asynchttpclient.RequestBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,10 +51,13 @@ public class FlightLogicService {
     private final TransactionService transactionService;
 
     private final PaymentRepository paymentRepository;
+    private final AirportRepository airportRepository;
+    private final AirlineRepository airlineRepository;
 
 
     // FLIGHT SEARCH ONE WAY / TWO WAY
 
+    @Cacheable("flightLogicSearch")
     public FlightSearchResponse searchFlight(FlightSearchDto flightSearchDto) {
 
 
@@ -56,6 +66,9 @@ public class FlightLogicService {
         mainSearchRequest.put("operation", "FlightAvailability");
         mainSearchRequest.put("journeyType", flightSearchDto.returnDate() == null ? "OneWay" : "Return");
         mainSearchRequest.put("departureDate", flightSearchDto.departureDate().toString());
+        if (flightSearchDto.returnDate() != null) {
+            mainSearchRequest.put("returnDate", flightSearchDto.returnDate().toString());
+        }
         mainSearchRequest.put("airportOriginCode", flightSearchDto.from());
         mainSearchRequest.put("airportDestinationCode", flightSearchDto.to());
         mainSearchRequest.put("class", flightSearchDto.preferredCabin());
@@ -101,13 +114,21 @@ public class FlightLogicService {
 
         String sessionId = airSearchResponseObject.optString("session_id");
 
-        AirInfoResponse[] airInfoResponses = mapperService.mapToFareItineraries(fareItineraries, sessionId);
+        List<AirInfoResponse> airInfoResponses = mapperService.mapToFareItineraries(fareItineraries, sessionId, flightSearchDto.from(), flightSearchDto.to());
+
+//        OnwardJourneyResponse onwardJourneyResponse = mapperService.mapOnWardFlight(fareItineraries, sessionId, flightSearchDto.from(), flightSearchDto.to());
+
+
+        var onWardJourney = new OnwardJourneyResponse();
+        onWardJourney.setAirInfo(airInfoResponses);
 
         return FlightSearchResponse.builder()
                 .status(200)
                 .message("success")
 //                .sessionId(sessionId)
-                .airInfo(List.of(airInfoResponses))
+                .onwardFlight(List.of(onWardJourney))
+                .returnFlight(List.of())
+//                .airInfo(airInfoResponses)
                 .build();
     }
 
@@ -381,8 +402,8 @@ public class FlightLogicService {
     }
 
     // AIRPORT LIST API
+    @Cacheable("GetAirports")
     public AirportListResp getAllAirports() {
-
         var airPortListRequest = new JSONObject()
                 .put("operation", "AirportList");
 
@@ -394,18 +415,29 @@ public class FlightLogicService {
 
         JSONArray jsonArray = airPortListResponse.getJSONArray("airportlist");
 
-        // Convert JSONArray to List
-        List<Object> airportList = jsonArray.toList();
+        // Convert JSONArray to List<Airport>
+        List<Airport> airportList = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonAirport = jsonArray.getJSONObject(i);
+            Airport airport = new Airport();
+            airport.setAirportCode(jsonAirport.getString("AirportCode"));
+            airport.setAirportName(jsonAirport.getString("AirportName"));
+            airport.setCountry(jsonAirport.getString("Country"));
+//            airport.setLatitude(jsonAirport.getDouble("Latitude"));
+            airport.setCity(jsonAirport.getString("City"));
+//            airport.setLongitude(jsonAirport.getDouble("Longitude"));
+            airportList.add(airport);
+        }
 
         return AirportListResp.builder()
                 .status(200)
                 .message("success")
-                .airPortList(airportList)
+                .airPortList(Collections.singletonList(airportList))
                 .airLineList(List.of())
                 .build();
     }
-    //AIRLINE LIST API
 
+    @Cacheable("GetAirlines")
     public AirportListResp getAllAirlines() {
 
         var airPortListRequest = new JSONObject()
@@ -419,8 +451,21 @@ public class FlightLogicService {
 
         JSONArray jsonArray = airPortListResponse.getJSONArray("airlines");
 
+
+        List<Airline> airportLists = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonAirport = jsonArray.getJSONObject(i);
+            Airline airport = new Airline();
+            airport.setAirLineCode(jsonAirport.getString("AirLineCode"));
+            airport.setAirLineName(jsonAirport.getString("AirLineName"));
+            airportLists.add(airport);
+        }
+
+//        airlineRepository.saveAll(airportLists);
+//
         // Convert JSONArray to List
         List<Object> airportList = jsonArray.toList();
+
 
         return AirportListResp.builder()
                 .status(200)
@@ -428,6 +473,33 @@ public class FlightLogicService {
                 .airLineList(airportList)
                 .airPortList(List.of())
                 .build();
+    }
+
+    public CustomResponse cancelFlight(String pnrCode) {
+
+        var requestBody = new JSONObject();
+        requestBody.put("UniqueID", pnrCode);
+        requestBody.put("operation", "CancelTrip");
+
+        log.info("FLIGHT LOGIC CANCEL FLIGHT REQUEST: {}", requestBody);
+
+        RequestBuilder requestBuilder = new RequestBuilder("POST")
+                .setUrl(FLIGHT_LOGIC_API)
+                .setBody(requestBody.toString());
+
+        JSONObject cancelFlightResponse = asyncHttp.sendRequest(requestBuilder);
+
+        log.info("CANCEL FLIGHT RESPONSE : {}", cancelFlightResponse);
+
+        // MAP ERROR RESPONSE
+
+        if (cancelFlightResponse.has("Errors") && cancelFlightResponse.optJSONObject("Errors") != null) {
+
+            String errorMessage = cancelFlightResponse.optJSONObject("Errors").optString("ErrorMessage");
+            return new CustomResponse(400, errorMessage);
+        }
+
+        return new CustomResponse(200, "Flight Cancelled successfully");
     }
 
 

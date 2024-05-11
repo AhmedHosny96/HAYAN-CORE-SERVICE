@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
@@ -29,5 +30,11 @@ public class UtilService {
         }
 
         return otp.toString();
+    }
+
+    // convert string minutes into duration
+
+    public Duration convertStringToDuration(int totalMinutesString) {
+        return Duration.ofMinutes(totalMinutesString);
     }
 }

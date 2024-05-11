@@ -13,16 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FlightSearchResponse {
-
-    private int status;
-    private String message;
-    private String key;
-
-    private List<OnwardJourneyResponse> onwardFlight;
-    private List<ReturnJourneyResponse> returnFlight;
-
-    //    private String sessionId;
+public class OnwardJourneyResponse {
     private PriceInfoResponse priceInfo;
     private List<AirInfoResponse> airInfo;
     private List<PassengerCriteria> passengerInfo;

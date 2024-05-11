@@ -4,8 +4,10 @@ package com.hayaan.flight.service;
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.CreateCommissionDto;
 import com.hayaan.flight.object.dto.CreateCommissionTypeDto;
+import com.hayaan.flight.object.entity.Agent;
 import com.hayaan.flight.object.entity.Commission;
 import com.hayaan.flight.object.entity.CommissionType;
+import com.hayaan.flight.repo.AgentRepo;
 import com.hayaan.flight.repo.CommissionRepo;
 import com.hayaan.flight.repo.CommissionTypeRepo;
 import lombok.RequiredArgsConstructor;
@@ -25,19 +27,25 @@ public class CommissionService {
 
     private final CommissionRepo commissionRepo;
 
+    private final AgentRepo agentRepo;
+
+
     // COMMISSIONS
 
     public CustomResponse createCommission(CreateCommissionDto createCommissionDto) {
 
-        Optional<CommissionType> byId = commissionTypeRepo.findById(createCommissionDto.commissionTypeId());
+        Optional<Agent> byId = agentRepo.findById(Long.valueOf(createCommissionDto.agentId()));
 
         if (!byId.isPresent()) {
             return new CustomResponse(404, "CommissionType not found");
         }
 
         Commission commission = Commission.builder()
-                .commissionTypeId(byId.get().getId())
-                .value(createCommissionDto.value())
+//                .commissionTypeId(byId.get().getId())
+                .amount(createCommissionDto.amount())
+                .flightType(createCommissionDto.flightType())
+                .classType(createCommissionDto.classType())
+                .agentId(createCommissionDto.agentId())
                 .createdAt(LocalDateTime.now())
                 .status(1)
                 .build();
