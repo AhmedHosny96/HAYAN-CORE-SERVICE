@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ReturnJourneyResponse {
+public class ReturnFlightResponse {
     private PriceInfoResponse priceInfo;
     private List<AirInfoResponse> airInfo;
     private List<PassengerCriteria> passengerInfo;

@@ -14,4 +14,6 @@ public class BaggageInfoResponse {
 
     private int value;
     private String unit;
+    private String allowedBaggage;
+
 }

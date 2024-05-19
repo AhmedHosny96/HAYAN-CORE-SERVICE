@@ -19,10 +19,9 @@ public class FlightSearchResponse {
     private String message;
     private String key;
 
-    private List<OnwardJourneyResponse> onwardFlight;
-    private List<ReturnJourneyResponse> returnFlight;
+    private List<DepartFlightResponse> departFlight;
+    private List<ReturnFlightResponse> returnFlight;
 
-    //    private String sessionId;
     private PriceInfoResponse priceInfo;
     private List<AirInfoResponse> airInfo;
     private List<PassengerCriteria> passengerInfo;
