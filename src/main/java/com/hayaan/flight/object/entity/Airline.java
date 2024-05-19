@@ -17,5 +17,7 @@ public class Airline {
 
     @Column(name = "AirLineCode")
     private String airLineCode;
+    @Column(name = "AirLineLogo")
+    private String airLineLogo;
 }
 

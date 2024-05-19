@@ -102,7 +102,7 @@ public class FlightController {
     @PostMapping("/flight/booking")
     @Tag(name = "Flight Booking", description = "Book a flight")
     public ResponseEntity<?> bookFlight(@RequestBody BookingRequestDto bookingRequestDto) {
-        BookingResponse bookingResponse = travelPortService.bookFlight(bookingRequestDto);
+        BookingResponse bookingResponse = flightLogicService.bookFlight(bookingRequestDto);
         return new ResponseEntity<>(bookingResponse, HttpStatusCode.valueOf(bookingResponse.getStatus()));
     }
 

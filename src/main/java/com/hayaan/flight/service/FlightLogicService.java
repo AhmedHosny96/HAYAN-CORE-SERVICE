@@ -9,10 +9,8 @@ import com.hayaan.flight.object.dto.TicketHistoryDto;
 import com.hayaan.flight.object.dto.booking.BookingRequestDto;
 import com.hayaan.flight.object.dto.booking.BookingResponse;
 import com.hayaan.flight.object.dto.booking.TravelersDto;
-import com.hayaan.flight.object.dto.flight.AirInfoResponse;
 import com.hayaan.flight.object.dto.flight.FlightSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchResponse;
-import com.hayaan.flight.object.dto.flight.OnwardJourneyResponse;
 import com.hayaan.flight.object.entity.Airline;
 import com.hayaan.flight.object.entity.Airport;
 import com.hayaan.flight.object.entity.Payment;
@@ -114,20 +112,19 @@ public class FlightLogicService {
 
         String sessionId = airSearchResponseObject.optString("session_id");
 
-        List<AirInfoResponse> airInfoResponses = mapperService.mapToFareItineraries(fareItineraries, sessionId, flightSearchDto.from(), flightSearchDto.to());
+        FlightSearchResponse searchResponse = mapperService.mapToFareItineraries(fareItineraries, sessionId, flightSearchDto.from(), flightSearchDto.to());
 
 //        OnwardJourneyResponse onwardJourneyResponse = mapperService.mapOnWardFlight(fareItineraries, sessionId, flightSearchDto.from(), flightSearchDto.to());
 
 
-        var onWardJourney = new OnwardJourneyResponse();
-        onWardJourney.setAirInfo(airInfoResponses);
+//        var onWardJourney = new OnwardJourneyResponse();
+//        onWardJourney.setAirInfo(airInfoResponses);
 
         return FlightSearchResponse.builder()
                 .status(200)
                 .message("success")
-//                .sessionId(sessionId)
-                .onwardFlight(List.of(onWardJourney))
-                .returnFlight(List.of())
+                .departFlight(searchResponse.getDepartFlight())
+                .returnFlight(searchResponse.getReturnFlight())
 //                .airInfo(airInfoResponses)
                 .build();
     }
@@ -458,11 +455,12 @@ public class FlightLogicService {
             Airline airport = new Airline();
             airport.setAirLineCode(jsonAirport.getString("AirLineCode"));
             airport.setAirLineName(jsonAirport.getString("AirLineName"));
+            airport.setAirLineLogo(jsonAirport.getString("AirLineLogo"));
             airportLists.add(airport);
         }
 
-//        airlineRepository.saveAll(airportLists);
-//
+        airlineRepository.saveAll(airportLists);
+
         // Convert JSONArray to List
         List<Object> airportList = jsonArray.toList();
 

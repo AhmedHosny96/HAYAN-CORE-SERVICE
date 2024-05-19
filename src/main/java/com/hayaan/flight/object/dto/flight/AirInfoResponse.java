@@ -44,7 +44,13 @@ public class AirInfoResponse {
 
     private Double totalAmount;
     private String currency;
+
+    private List<Duration> durationList;
+    
     private List<TransitDetails> transitFlight;
+    private List<PriceInfoResponse> fareInfo;
+    private List<BaggageInfoResponse> baggageInfo;
     private String airlineLogoUrl;
+
 
 }
