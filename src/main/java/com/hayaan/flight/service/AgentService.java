@@ -28,13 +28,13 @@ public class AgentService {
     public CustomResponse createAgentType(CreateAgentTypeDto agentTypeDto) {
         Optional<AgentType> byType = agentTypeRepo.findByType(agentTypeDto.type());
         if (byType.isPresent()) {
-            return new CustomResponse(400, "Type already exists");
+            return new CustomResponse(400, "Type already exists", null);
         }
         var createAgentType = new AgentType();
         createAgentType.setType(agentTypeDto.type());
         agentTypeRepo.save(createAgentType);
 
-        var customResponse = new CustomResponse(200, "AgentType created successfully");
+        var customResponse = new CustomResponse(200, "AgentType created successfully", null);
         return customResponse;
     }
 
@@ -45,14 +45,14 @@ public class AgentService {
     public CustomResponse updateAgentType(int id, CreateAgentTypeDto updateAgentTypeDto) {
         Optional<AgentType> optionalAgentType = agentTypeRepo.findById(id);
         if (optionalAgentType.isEmpty()) {
-            return new CustomResponse(404, "AgentType not found");
+            return new CustomResponse(404, "AgentType not found", null);
         }
 
         AgentType agentType = optionalAgentType.get();
         agentType.setType(updateAgentTypeDto.type());
         agentTypeRepo.save(agentType);
 
-        return new CustomResponse(200, "AgentType updated successfully");
+        return new CustomResponse(200, "AgentType updated successfully", null);
     }
 
     public Optional<AgentType> getAgentTypeById(int id) {
@@ -64,7 +64,7 @@ public class AgentService {
         Optional<Agent> byName = agentRepo.findByName(createAgentDto.getName());
 
         if (byName.isPresent()) {
-            return new CustomResponse(400, "Type already exists");
+            return new CustomResponse(400, "Type already exists", null);
         }
 
         AgentType agentType = agentTypeRepo.findById(createAgentDto.getTypeId()).get();
@@ -79,7 +79,7 @@ public class AgentService {
                 .build();
         agentRepo.save(agent);
 
-        return new CustomResponse(200, "Agent created successfully");
+        return new CustomResponse(200, "Agent created successfully", null);
     }
 
     public List<?> getAllAgents() {
@@ -89,7 +89,7 @@ public class AgentService {
     public CustomResponse updateAgent(Long id, CreateAgentDto createAgentDto) {
         Optional<Agent> byId = agentRepo.findById(id);
         if (byId.isEmpty()) {
-            return new CustomResponse(404, "AgentType not found");
+            return new CustomResponse(404, "AgentType not found", null);
         }
 
         ModelMapper modelMapper = new ModelMapper();
@@ -99,7 +99,7 @@ public class AgentService {
 
         agentRepo.save(agent);
 
-        return new CustomResponse(200, "AgentType updated successfully");
+        return new CustomResponse(200, "AgentType updated successfully", null);
     }
 
     // AGENT STATUS CHANGE 0/1 ->
@@ -109,12 +109,12 @@ public class AgentService {
             Agent agent = optionalAgent.get();
             agent.setStatus(statusChangeDto.status());
             agentRepo.save(agent);
-            return new CustomResponse(200, "Agent status changed successfully");
+            return new CustomResponse(200, "Agent status changed successfully", null);
         } else {
-            return new CustomResponse(404, "Agent not found");
+            return new CustomResponse(404, "Agent not found", null);
         }
     }
-    
+
     public Agent getAgentById(Long id) {
         Optional<Agent> byId = agentRepo.findById(id);
 //        if (byId.isEmpty()) {

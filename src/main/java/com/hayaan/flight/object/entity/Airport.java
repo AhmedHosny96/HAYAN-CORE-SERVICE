@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "Airports")
+@Table(name = "Airport")
 public class Airport {
 
     @jakarta.persistence.Id

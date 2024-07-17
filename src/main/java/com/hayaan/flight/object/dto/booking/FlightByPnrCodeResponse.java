@@ -32,5 +32,4 @@ public class FlightByPnrCodeResponse {
 
     private List<PassengerType> passengerInfo;
 
-
 }

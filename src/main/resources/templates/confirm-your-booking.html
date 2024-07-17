@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #333A56;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #FFC107;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .header img {
+            width: 100%; /* Adjust this value as needed */
+            max-width: 600px; /* Adjust this value to your desired maximum width */
+            height: auto;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666666;
+        }
+
+        .footer img {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+
+        .trip-summary {
+            margin-top: 20px;
+            border-top: 1px solid #FFC107;
+            padding-top: 10px;
+        }
+
+        .trip-summary h3 {
+            color: #FFC107;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="../static/images/header.png" th:src="@{images/header.png}"
+             alt="Hayaan Travel Solutions"/></div>
+    <div class="content">
+        <p>Dear [Customer Name],</p>
+        <p>Thank you for booking with Hayaan Travel Solutions. To confirm you ticket please pay the amount due.</p>
+        <h3>Booking Details:</h3>
+        <p><strong>Booking Reference: </strong> <span th:text="${pnr}"></span><br>
+            <strong>Name:</strong> <span th:text="${customerName}"></span><br>
+            <strong>Email: </strong><span th:text="${customerEmail}"></span></p>
+        <div class="trip-summary">
+            <h3>Trip Summary:</h3>
+            <p><strong>Passengers: </strong> <span th:text="${noOfPassengers}"></span> <br>
+                <strong>Origin: </strong> <span th:text="${origin}"></span><br>
+                <strong>Departure date and time: </strong> <span th:text="${departureDateAndTime}"></span><br>
+                <strong>Destination: </strong> <span th:text="${destination}"></span><br>
+                <strong>Arrival date and time: </strong> <span th:text="${arrivalDateAndTime}"></span><br>
+                <strong>Flight number: </strong> <span th:text="${flightNumber}"></span><br>
+                <strong>Class: </strong> <span th:text="${class}"></span><br>
+                <strong>Amount Due: </strong> <span th:text="${ticketAmount}"></span></p>
+        </div>
+        <p>Please <a href="https://hayaantravel.com/flights/search" target="_blank" style="color: #FFC107;">click
+            here</a> to complete
+            your payment now.</p>
+    </div>
+    <div class="footer">
+        <p>If you need assistance, contact us at info@hayaantravel.com.</p>
+        <p>Best regards,<br>Hayaan Travel Solutions Team</p>
+        <img src="../static/images/footer.png" th:src="@{images/footer.png}"
+             alt="Hayaan Travel Solutions"/>
+    </div>
+</div>
+</body>
+</html>

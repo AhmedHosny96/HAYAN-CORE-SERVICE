@@ -21,6 +21,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import java.util.Arrays;
 
@@ -32,7 +33,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] WHITE_LIST_URLS = {"/**"};
+    private final String[] WHITE_LIST_URLS = {"/**", "images/**"};
     private final JwtFilter jwtFilter;
 
     @Bean
@@ -45,6 +46,20 @@ public class SecurityConfig {
         return (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 
+//    @Bean
+//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        registry.addResourceHandler(
+//                "/webjars/**",
+//                "/img/**",
+//                "/css/**",
+//                "/js/**")
+//                .addResourceLocations(
+//                        "classpath:/META-INF/resources/webjars/",
+//                        "classpath:/static/images/",
+//                        "classpath:/static/css/",
+//                        "classpath:/static/js/");
+//    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -55,7 +70,8 @@ public class SecurityConfig {
                     configuration.setAllowedHeaders(Arrays.asList("*"));
                     return configuration;
                 }))
-                .authorizeHttpRequests(request -> request.requestMatchers(WHITE_LIST_URLS)
+                .authorizeHttpRequests(request ->
+                        request.requestMatchers(WHITE_LIST_URLS)
                         .permitAll().anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(

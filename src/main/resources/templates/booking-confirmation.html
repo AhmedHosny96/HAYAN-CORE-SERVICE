@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Booking Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #333A56;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #FFC107;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .header img {
+            width: 100px;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666666;
+        }
+
+        .trip-summary {
+            margin-top: 20px;
+            border-top: 1px solid #FFC107;
+            padding-top: 10px;
+        }
+
+        .trip-summary h3 {
+            color: #FFC107;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="../static/images/header.png" th:src="@{images/header.png}"
+             alt="Hayaan Travel Solutions"/></div>
+    <div class="content">
+        <p>Dear <span th:text="${customerName}"></span>,</p>
+        <p>Thank you for booking with Hayaan Travel Solutions. Your booking has been successfully confirmed.</p>
+        <h3>Booking Details:</h3>
+        <p><strong>Booking Reference:</strong> <span th:text="${pnr}"></span><br>
+            <strong>Name:</strong><span th:text="${customerName}"></span><br>
+            <strong>Email:</strong><span th:text="${customerEmail}"></span></p>
+        <div class="trip-summary">
+            <h3>Trip Summary:</h3>
+            <p><strong>Passengers: </strong> <span th:text="${noOfPassengers}"></span> <br>
+                <strong>Origin: </strong> <span th:text="${origin}"></span><br>
+                <strong>Departure date and time: </strong> <span th:text="${departureDateAndTime}"></span><br>
+                <strong>Destination: </strong> <span th:text="${destination}"></span><br>
+                <strong>Arrival date and time: </strong> <span th:text="${arrivalDateAndTime}"></span><br>
+                <strong>Flight number: </strong> <span th:text="${flightNumber}"></span><br>
+                <strong>Class: </strong> <span th:text="${class}"></span><br>
+        </div>
+    </div>
+    <div class="footer">
+        <p>If you have any questions, feel free to contact us at [Contact Information].</p>
+        <p>Safe travels!<br>Best regards,<br>Hayaan Travel Solutions Team</p>
+        <img src="../static/images/footer.png" th:src="@{images/footer.png}"
+             alt="Hayaan Travel Solutions"/>
+    </div>
+</div>
+</body>
+</html>

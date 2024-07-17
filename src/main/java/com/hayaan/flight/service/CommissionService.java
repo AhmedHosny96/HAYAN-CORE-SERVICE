@@ -37,7 +37,7 @@ public class CommissionService {
         Optional<Agent> byId = agentRepo.findById(Long.valueOf(createCommissionDto.agentId()));
 
         if (!byId.isPresent()) {
-            return new CustomResponse(404, "CommissionType not found");
+            return new CustomResponse(404, "CommissionType not found", null);
         }
 
         Commission commission = Commission.builder()
@@ -52,7 +52,7 @@ public class CommissionService {
 
         commissionRepo.save(commission);
 
-        return new CustomResponse(200, "Commission created successfully");
+        return new CustomResponse(200, "Commission created successfully", null);
     }
 
     public List<Commission> getAllCommissions() {
@@ -62,14 +62,14 @@ public class CommissionService {
     public CustomResponse createCommissionType(CreateCommissionTypeDto commissionTypeDto) {
         Optional<CommissionType> byType = commissionTypeRepo.findByType(commissionTypeDto.type());
         if (byType.isPresent()) {
-            return new CustomResponse(400, "Type already exists");
+            return new CustomResponse(400, "Type already exists", null);
         }
         CommissionType commissionType = new CommissionType();
         commissionType.setType(commissionTypeDto.type());
         commissionType.setRate(commissionTypeDto.rate());
         commissionTypeRepo.save(commissionType);
 
-        return new CustomResponse(200, "CommissionType created successfully");
+        return new CustomResponse(200, "CommissionType created successfully", null);
     }
 
     public List<CommissionType> getAllCommissionTypes() {
@@ -79,14 +79,14 @@ public class CommissionService {
     public CustomResponse updateCommissionType(int id, CreateCommissionTypeDto updateCommissionTypeDto) {
         Optional<CommissionType> optionalCommissionType = commissionTypeRepo.findById(id);
         if (optionalCommissionType.isEmpty()) {
-            return new CustomResponse(404, "CommissionType not found");
+            return new CustomResponse(404, "CommissionType not found", null);
         }
 
         CommissionType commissionType = optionalCommissionType.get();
         commissionType.setType(updateCommissionTypeDto.type());
         commissionTypeRepo.save(commissionType);
 
-        return new CustomResponse(200, "CommissionType updated successfully");
+        return new CustomResponse(200, "CommissionType updated successfully", null);
     }
 
     public Optional<CommissionType> getCommissionTypeById(int id) {

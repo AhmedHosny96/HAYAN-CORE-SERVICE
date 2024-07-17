@@ -59,10 +59,21 @@ public class Payment {
     @Column(name = "PaymentStatusDesc")
     private String paymentStatusDesc;
 
+    @Column(name = "WithOutPaymentNotification")
+    private Boolean withOutPaymentNotification;
+
+    @Column(name = "PendingPaymentNotification")
+    private Boolean pendingNotification;
+
+    @Column(name = "SuccessPaymentNotification")
+    private Boolean successPaymentNotification;
+
+    @Column(name = "ReminderNotification")
+    private Boolean reminderNotification;
+
     @Column(name = "CreatedAt")
-
     private LocalDateTime createdAt;
-    @Column(name = "UpdatedAt")
 
+    @Column(name = "UpdatedAt")
     private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.hayaan.flight.object.dto.booking;
 
+import com.hayaan.dto.PassengerType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,12 +19,13 @@ public class TravelersDto {
     private String lastName;
     private String gender;
     private LocalDate dateOfBirth;
-    private List<PhoneNumber> phoneNumber;
+    private List<PhoneNumber> phoneNumbers; // Changed to List<PhoneNumber>
     private String email;
-    private Address address;
-    private String travelerType;
+    private Address address; // Changed to Address type
+    private PassengerType travelerType;
     private String idNo;
     private String nationality;
+    private String passportExpiryDate;
 
 
     @Data

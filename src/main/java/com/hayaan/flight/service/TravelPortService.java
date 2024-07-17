@@ -393,7 +393,7 @@ public class TravelPortService {
 
             // Construct phoneNumber array for each traveler
             JSONArray phoneNumberArray = new JSONArray();
-            for (TravelersDto.PhoneNumber phoneNumber : traveler.getPhoneNumber()) {
+            for (TravelersDto.PhoneNumber phoneNumber : traveler.getPhoneNumbers()) {
                 JSONObject phoneNumberObject = new JSONObject();
                 phoneNumberObject.put("phoneNumber", phoneNumber.getPhoneNumber());
                 phoneNumberObject.put("areCode", phoneNumber.getAreCode());
@@ -496,7 +496,7 @@ public class TravelPortService {
                 .destination(airSegment.optString("destination"))
                 .airlineId(airSegment.optString("carrier"))
                 .airTransactionId(transactionId)
-                .travelDate(LocalDateTime.parse(airSegment.optString("departureTime"), DATE_TIME_FORMATTER))
+                .departureDateTime(LocalDateTime.parse(airSegment.optString("departureTime"), DATE_TIME_FORMATTER))
 
 //                .returnDate(returnDate)
                 .ticketAmount(priceInfoResponse.getOriginalPrice())
@@ -505,7 +505,7 @@ public class TravelPortService {
                 .middleName(travelers.get(0).getMiddleName())
                 .lastName(travelers.get(0).getLastName())
                 .userType("A")
-                .phoneNumber(travelers.get(0).getPhoneNumber().get(0).getPhoneNumber())
+                .phoneNumber(travelers.get(0).getPhoneNumbers().get(0).getPhoneNumber())
                 .email(travelers.get(0).getEmail())
 
                 .build();
@@ -632,7 +632,7 @@ public class TravelPortService {
         // MAP ERROR RESPONSE
 
         if (flightRetrieveResponse.has("status")) {
-            return new CustomResponse(400, flightRetrieveResponse.optString("details"));
+            return new CustomResponse(400, flightRetrieveResponse.optString("details"), null);
         }
 
         // UPDATE THE FLIGHT DETAILS
@@ -645,6 +645,6 @@ public class TravelPortService {
         ticketHistoryRepo.save(ticketHistory);
 
 
-        return new CustomResponse(200, "Flight Cancelled successfully");
+        return new CustomResponse(200, "Flight Cancelled successfully", null);
     }
 }

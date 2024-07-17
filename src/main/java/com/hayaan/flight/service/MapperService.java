@@ -290,7 +290,7 @@ public class MapperService {
             }
         }
 
-        flightSearchResponse.setDepartFlight(onwardFlightList);
+        flightSearchResponse.setOnwardFlight(onwardFlightList);
         flightSearchResponse.setReturnFlight(returnFlightList);
         // Set other fields of flightSearchResponse if needed (status, message, key, etc.)
 

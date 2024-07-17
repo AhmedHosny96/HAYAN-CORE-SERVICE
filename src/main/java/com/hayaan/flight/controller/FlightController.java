@@ -3,6 +3,7 @@ package com.hayaan.flight.controller;
 
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.AirPriceSolution;
+import com.hayaan.flight.object.dto.AirlineListResp;
 import com.hayaan.flight.object.dto.AirportListResp;
 import com.hayaan.flight.object.dto.booking.BookingRequestDto;
 import com.hayaan.flight.object.dto.booking.BookingResponse;
@@ -57,8 +58,8 @@ public class FlightController {
 
     @GetMapping("/airlines")
     @Tag(name = "Airlines", description = "Fetch all airlines")
-    public ResponseEntity<AirportListResp> getAirlines() {
-        AirportListResp allAirlines = flightLogicService.getAllAirlines();
+    public ResponseEntity<AirlineListResp> getAirlines() {
+        AirlineListResp allAirlines = flightLogicService.getAllAirlines();
         return new ResponseEntity<>(allAirlines, HttpStatusCode.valueOf(allAirlines.getStatus()));
     }
 
@@ -80,7 +81,7 @@ public class FlightController {
     @GetMapping("/flight") // confirms ticket in travel port
     @Tag(name = "Flight Details", description = "Retrieve flight details by PNR code")
     public ResponseEntity<FlightByPnrCodeResponse> getFlightByPnrCode(@RequestParam("pnrCode") String pnrCode) {
-        FlightByPnrCodeResponse flightByPnr = travelPortService.findFlightByPnr(pnrCode);
+        FlightByPnrCodeResponse flightByPnr = flightLogicService.getTripDetails(pnrCode);
         return new ResponseEntity<>(flightByPnr, HttpStatusCode.valueOf(flightByPnr.getStatus()));
     }
 
@@ -91,7 +92,7 @@ public class FlightController {
         FlightSearchResponse flightSearchResponse = flightLogicService.searchFlight(flightSearchDto);
         return new ResponseEntity<>(flightSearchResponse, HttpStatusCode.valueOf(flightSearchResponse.getStatus()));
     }
-    
+
     @PostMapping("/flight/detail")
     @Tag(name = "Flight Detail", description = "Search single flight detail")
     public ResponseEntity<AirPriceSolution> searchFlight(@RequestBody FlightPriceSearchDto flightSearchDto) {
