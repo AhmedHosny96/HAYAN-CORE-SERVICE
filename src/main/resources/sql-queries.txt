@@ -1,3 +1,21 @@
+
+  CREATE TABLE Payment (
+                          id INT PRIMARY KEY IDENTITY ,
+                          Pnr VARCHAR(10),
+                          Amount DECIMAL(10, 2),
+                          PaymentMode VARCHAR(25),
+                          PaymentReference VARCHAR(25),
+                          PaymentDate DATETIME,
+                          RequestBody TEXT,
+                          ResponseBody TEXT,
+                          Response TEXT,
+                          UserType VARCHAR(5),
+                          UserId INT,
+                          PaymentStatus VARCHAR(20),
+                          CreatedAt DATETIME,
+                          UpdatedAt DATETIME
+);
+
 CREATE TABLE Agent (
     Id BIGINT PRIMARY KEY IDENTITY,
     Name VARCHAR(255),
@@ -6,10 +24,10 @@ CREATE TABLE Agent (
     City VARCHAR(255),
     ContactEmail VARCHAR(255),
     Status INT,
-    TypeId BIGINT, -- Assuming TypeId is the foreign key referencing AgentType
+    TypeId INT, -- Ensuring TypeId matches the datatype of AgentType(Id)
     CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
     UpdatedAt DATETIME,
-    FOREIGN KEY (TypeId) REFERENCES AgentType(Id) -- Assuming AgentType has a primary key named Id
+    FOREIGN KEY (TypeId) REFERENCES AgentType(Id)
 );
 
 
@@ -22,7 +40,7 @@ CREATE TABLE AgentType (
 
 
 CREATE TABLE Role (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    Id BIGINT IDENTITY PRIMARY KEY,
     Name VARCHAR(255) NOT NULL UNIQUE,
     Description TEXT,
     Status INT,
@@ -34,25 +52,21 @@ CREATE TABLE Role (
 
 
 CREATE TABLE Users (
-    id INT IDENTITY(1,1) PRIMARY KEY,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
     Username NVARCHAR(255),
     Email NVARCHAR(255),
     PhoneNumber NVARCHAR(255),
     FullName NVARCHAR(255),
-	   Password NVARCHAR(255),
-
-    agentId BIGINT,
+    Password NVARCHAR(255),
+    AgentId BIGINT,
     FOREIGN KEY (agentId) REFERENCES Agent(Id),
-	    roleId INT,
-    FOREIGN KEY (roleId) REFERENCES Role(id),
-
-	FirstLogin BIT,
+    RoleId BIGINT,
+    FOREIGN KEY (roleId) REFERENCES Role(Id),
+    FirstLogin BIT,
     Status BIT,
     CreatedBy NVARCHAR(255),
-    CreatedDate DATETIME
-
+    CreatedDate DATETIME NOT NULL DEFAULT GETDATE()
 );
-
 
 CREATE TABLE CommissionType (
     Id INT PRIMARY KEY IDENTITY,
@@ -70,32 +84,27 @@ CREATE TABLE Commission (
 
 -- create ticket history table
 
-CREATE TABLE [dbo].[TicketHistory] (
-    [id] INT PRIMARY KEY IDENTITY(1,1),
-    [UserId] BIGINT,
-    [PNR] NVARCHAR(255) UNIQUE,
-    [Origin] NVARCHAR(255),
-    [Destination] NVARCHAR(255),
-    [TicketAmount] FLOAT,
-    [TravelDate] DATETIME,
-    [ReturnDate] DATE,
-    [AirlineId] NVARCHAR(255),
-    [AirTransactionId] NVARCHAR(255),
-    [PaymentDate] DATETIME,
-    [PaymentMethod] NVARCHAR(50),
-    [PaymentReference] NVARCHAR(100) UNIQUE,
-    [FirstName] NVARCHAR(100),
-    [MiddleName] NVARCHAR(100),
-    [LastName] NVARCHAR(100),
-    [Email] NVARCHAR(255),
-    [PhoneNumber] NVARCHAR(20),
-    [UserType] NVARCHAR(50),
-    [Document] NVARCHAR(255),
-    [documentIdNumber] NVARCHAR(50),
-    [DateOfIssue] DATETIME,
-    [ExpiryDate] DATETIME,
-    [CreatedDate] DATETIME,
-    [Status] INT
+CREATE TABLE TicketHistory (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+   Pnr VARCHAR(255) UNIQUE,
+    Origin VARCHAR(255),
+    Destination VARCHAR(255),
+    TicketAmount FLOAT,
+    CommissionAmount FLOAT,
+    DepartureDateTime DATETIME2,
+    ArrivalDateTime DATETIME2,
+    ReturnDateTime DATETIME2,
+    FlightNumber VARCHAR(255),
+	TravelType VARCHAR(50),
+    TotalNoOfPassengers VARCHAR(255),
+    PaymentReference VARCHAR(255),
+	    AirTransactionId VARCHAR(255),
+	  UniqueId VARCHAR(255),
+        UserId BIGINT,
+    CreatedDate DATETIME2,
+    ExpireDate DATETIME2,
+    Status INT,
+    StatusDesc VARCHAR(255)
 );
 
 CREATE TABLE Payment (
@@ -113,4 +122,19 @@ CREATE TABLE Payment (
                           PaymentStatus VARCHAR(20),
                           CreatedAt DATETIME,
                           UpdatedAt DATETIME
+);
+
+CREATE TABLE Airport (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    AirportCode VARCHAR(255),
+    AirportName VARCHAR(255),
+    Country VARCHAR(255),
+    City VARCHAR(255)
+);
+
+CREATE TABLE Airline (
+    Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    AirLineName VARCHAR(255),
+    AirLineCode VARCHAR(255),
+    AirLineLogo VARCHAR(255)
 );

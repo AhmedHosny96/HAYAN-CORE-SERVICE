@@ -1,10 +1,9 @@
 package com.hayaan.flight.object.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.hayaan.flight.object.entity.Airport;
+import com.hayaan.flight.object.entity.Airline;
 import lombok.Builder;
 import lombok.Data;
-import org.json.JSONArray;
 
 import java.util.List;
 
@@ -12,10 +11,11 @@ import java.util.List;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 
-public class AirportListResp {
-
+public class AirlineListResp {
+    
     private int status;
     private String message;
-    private List<Airport> airPortList;
-    private List<Object> airLineList;
+    private List<Airline> airLineList;
+
+
 }

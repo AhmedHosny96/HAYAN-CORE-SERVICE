@@ -38,7 +38,6 @@ public class Agent {
 
     private String contactEmail;
     @Column(name = "ContactPhone")
-
     private String contactPhone;
 
     @Column(name = "Status")
@@ -47,7 +46,7 @@ public class Agent {
 
     //    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Type", referencedColumnName = "Id")
+    @JoinColumn(name = "TypeId", referencedColumnName = "Id")
 //    @Column(name = "TypeId")
     private AgentType type;
 

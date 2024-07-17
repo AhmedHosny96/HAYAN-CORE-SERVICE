@@ -59,7 +59,7 @@ public class UserService {
         Optional<Role> existingRole = roleRepo.findByName(roleDto.name());
 
         if (existingRole.isPresent()) {
-            return new CustomResponse(400, "Role with the same name already exists");
+            return new CustomResponse(400, "Role with the same name already exists", null);
         }
 
         var role = Role.builder()
@@ -69,7 +69,7 @@ public class UserService {
                 .build();
         roleRepo.save(role);
 
-        return new CustomResponse(200, "Role created successfully");
+        return new CustomResponse(200, "Role created successfully", null);
     }
 
 
@@ -87,11 +87,11 @@ public class UserService {
         var role = roleRepo.findById(userDto.roleId());
 
         if (!agent.isPresent()) {
-            return new CustomResponse(400, "AgentId not found");
+            return new CustomResponse(400, "AgentId not found", null);
 
         }
         if (!role.isPresent()) {
-            return new CustomResponse(400, "RoleId not found");
+            return new CustomResponse(400, "RoleId not found", null);
 
         }
 
@@ -115,12 +115,12 @@ public class UserService {
         context.setVariable("username", userDto.username());
         context.setVariable("otp", generatedPassword);
         context.setVariable("currentYear", LocalDate.now().getYear());
-        notificationService.sendMail(userDto.email(), "Onetime password", "email-template", context);
+        notificationService.sendMail(userDto.email(), "Onetime password", "user-credentials", context);
         // send sms
         String smsBody = "Dear " + userDto.username() + ", your one-time password is: " + generatedPassword + " Remember to change it after login.";
         notificationService.sendSms(user.getPhoneNumber(), smsBody);
 
-        return new CustomResponse(200, "User created successfully");
+        return new CustomResponse(200, "User created successfully", null);
 
     }
 }

@@ -19,7 +19,7 @@ public class FlightSearchResponse {
     private String message;
     private String key;
 
-    private List<DepartFlightResponse> departFlight;
+    private List<DepartFlightResponse> onwardFlight;
     private List<ReturnFlightResponse> returnFlight;
 
     private PriceInfoResponse priceInfo;

@@ -1,0 +1,117 @@
+ {
+   "TripDetailsResponse": {
+     "TripDetailsResult": {
+       "Success": "true",
+       "Target": "Test",
+       "TravelItinerary": {
+         "BookingStatus": "Booked",
+         "CrossBorderIndicator": false,
+         "Destination": "ADD",
+         "FareType": "Public",
+         "IsCommissionable": false,
+         "IsMOFare": false,
+         "ItineraryInfo": {
+           "CustomerInfos": [
+             {
+               "CustomerInfo": {
+                 "PassengerType": "ADT",
+                 "PassengerFirstName": "Amin",
+                 "PassengerLastName": "Mohumed",
+                 "PassengerTitle": "Mr",
+                 "ItemRPH": 1,
+                 "eTicketNumber": "OVSVYB",
+                 "DateOfBirth": "1991-01-01T00:00:00",
+                 "EmailAddress": "ame305a@gmail.com",
+                 "Gender": null,
+                 "PassengerNationality": "AF",
+                 "PassportNumber": "532353",
+                 "PhoneNumber": "911679409",
+                 "PostCode": ""
+               }
+             }
+           ],
+           "ItineraryPricing": {
+             "EquiFare": {
+               "Amount": "141.04",
+               "CurrencyCode": "USD",
+               "DecimalPlaces": 2
+             },
+             "ServiceTax": {
+               "Amount": "0.00",
+               "CurrencyCode": "USD",
+               "DecimalPlaces": 2
+             },
+             "Tax": {
+               "Amount": "33.00",
+               "CurrencyCode": "USD",
+               "DecimalPlaces": 2
+             },
+             "TotalFare": {
+               "Amount": "174.04",
+               "CurrencyCode": "USD",
+               "DecimalPlaces": 2
+             }
+           },
+           "ReservationItems": [
+             {
+               "ReservationItem": {
+                 "AirEquipmentType": "DH8",
+                 "AirlinePNR": "OVSVYB",
+                 "ArrivalAirportLocationCode": "ADD",
+                 "ArrivalDateTime": "2024-07-14T19:10:00",
+                 "ArrivalTerminal": "",
+                 "Baggage": "10 KG",
+                 "CabinClassText": "",
+                 "DepartureAirportLocationCode": "JIJ",
+                 "DepartureDateTime": "2024-07-14T17:50:00",
+                 "DepartureTerminal": "",
+                 "FlightNumber": "227",
+                 "ItemRPH": 1,
+                 "JourneyDuration": "80",
+                 "MarketingAirlineCode": "ET",
+                 "NumberInParty": 1,
+                 "OperatingAirlineCode": "ET",
+                 "ResBookDesigCode": "S",
+                 "StopQuantity": 0
+               }
+             }
+           ],
+           "TripDetailsPTC_FareBreakdowns": [
+             {
+               "TripDetailsPTC_FareBreakdown": {
+                 "PassengerTypeQuantity": { "Code": "ADT", "Quantity": 1 },
+                 "TripDetailsPassengerFare": {
+                   "EquiFare": {
+                     "Amount": "141.04",
+                     "CurrencyCode": "USD",
+                     "DecimalPlaces": 2
+                   },
+                   "ServiceTax": {
+                     "Amount": "0.00",
+                     "CurrencyCode": "USD",
+                     "DecimalPlaces": 2
+                   },
+                   "Tax": {
+                     "Amount": "33.00",
+                     "CurrencyCode": "USD",
+                     "DecimalPlaces": 2
+                   },
+                   "TotalFare": {
+                     "Amount": "174.04",
+                     "CurrencyCode": "USD",
+                     "DecimalPlaces": 2
+                   }
+                 }
+               }
+             }
+           ],
+           "ExtraServices": "",
+           "BookingNotes": []
+         },
+         "UniqueID": "TR20402024",
+         "Origin": "JIJ",
+         "TicketStatus": "Ticketed"
+       }
+     }
+   }
+ }

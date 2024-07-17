@@ -1,0 +1,18 @@
+package com.hayaan.flight.repo;
+
+import com.hayaan.flight.object.entity.Passenger;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface PassengerRepo extends JpaRepository<Passenger, Long> {
+
+
+    @Query("SELECT p FROM Passenger p WHERE p.ticketHistory.id = :ticketHistoryId")
+    Optional<List<Passenger>> findByTicketHistoryId(@Param("ticketHistoryId") Long ticketHistoryId);
+}
