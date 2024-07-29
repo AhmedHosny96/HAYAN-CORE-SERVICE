@@ -1,11 +1,12 @@
 package com.hayaan.flight.object.dto;
 
 
+import com.hayaan.flight.object.FlightType;
+
 public record CreateCommissionDto(
-//        int commissionTypeId,
         double amount,
-        Integer flightType,
-        Integer classType,
-        Integer agentId
+        FlightType flightType,
+        Long commissionTypeId,
+        Long userId
 ) {
 }

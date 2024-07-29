@@ -1,5 +1,6 @@
 package com.hayaan.auth.object.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hayaan.flight.object.entity.Agent;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -34,10 +35,11 @@ public class User {
     private String fullName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "agentId") // Specify the column name here
+    @JoinColumn(name = "AgentId") // Specify the column name here
     private Agent agent;
 
     @Column(name = "Password")
+    @JsonIgnore
     private String password;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,7 +55,7 @@ public class User {
     @Column(name = "CreatedDate")
     private LocalDateTime createdDate;
 
-    @Column(name = "FirstLogin")
-    private boolean firstLogin;
+    @Column(name = "IsPasswordChanged")
+    private boolean isPasswordChanged;
 
 }

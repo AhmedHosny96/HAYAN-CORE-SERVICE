@@ -41,7 +41,6 @@ public class Agent {
     private String contactPhone;
 
     @Column(name = "Status")
-
     private int status;
 
     //    @JsonIgnore

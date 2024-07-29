@@ -1,12 +1,15 @@
 package com.hayaan.auth.controller;
 
 
+import com.hayaan.auth.object.dto.ChangePasswordDto;
 import com.hayaan.auth.object.dto.CreateRoleDto;
 import com.hayaan.auth.object.dto.CreateUserDto;
+import com.hayaan.auth.object.dto.UserDetailsResp;
 import com.hayaan.auth.object.entity.Role;
 import com.hayaan.auth.service.UserService;
 import com.hayaan.dto.CustomResponse;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 
-public class UserRoleController {
+public class UserController {
 
     private final UserService userService;
 
@@ -29,6 +32,19 @@ public class UserRoleController {
     public ResponseEntity<CustomResponse> createUser(@RequestBody CreateUserDto userDto) throws MessagingException {
         CustomResponse response = userService.createUser(userDto);
         return ResponseEntity.status(response.status()).body(response);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> changePassword(@PathVariable Long userId) {
+        UserDetailsResp userDetails = userService.getUserDetails(userId);
+        return ResponseEntity.status(userDetails.getStatus()).body(userDetails);
+    }
+
+    // change password
+    @PutMapping("/user/change-password/{userId}")
+    public ResponseEntity<?> getUserDetails(@PathVariable Long userId, @Valid @RequestBody ChangePasswordDto changePasswordDto) {
+        CustomResponse customResponse = userService.changePassword(userId, changePasswordDto);
+        return ResponseEntity.status(customResponse.status()).body(customResponse);
     }
 
     @GetMapping("/roles")

@@ -1,6 +1,8 @@
 package com.hayaan.flight.object.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hayaan.auth.object.entity.User;
+import com.hayaan.flight.object.FlightType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,29 +23,27 @@ public class Commission {
     @Column(name = "Id")
     private Integer id;
 
-    @Column(name = "AgentId")
-    private Integer agentId;
+    @ManyToOne
+    @JoinColumn(name = "CreatedById", nullable = false)
+    @JsonIgnore
+    private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "commissionTypeId", nullable = false)
+    private CommissionType commissionType;
+
+    @Column(name = "UserType")
+    private String UserType;
 
     @Column(name = "Amount")
     private Double amount;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Id", referencedColumnName = "Id")
-    private User createdBy;
-
     @Column(name = "Status")
     private Integer status;
 
-    @Column(name = "FlightType")
-    private Integer flightType;
-
-    @Column(name = "ClassType")
-    private Integer classType;
-
-//    FlightType INT,
-//    ClassType INT,
-//    CreatedDate DATETIME2,
+    @Column(name = "FlightType") // domestic iyo internation
+    @Enumerated(EnumType.STRING)
+    private FlightType flightType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false, updatable = false)

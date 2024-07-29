@@ -7,8 +7,8 @@ public record CreateUserDto(
         String email,
         String phoneNumber,
         String fullName,
-        Long agentId,
         int roleId,
+        int agentId,
         String createdBy
 ) {
 }

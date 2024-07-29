@@ -60,10 +60,10 @@
 <body>
 <div class="container">
     <div class="header">
-        <img src="../static/images/header.png" th:src="@{images/header.png}"
+        <img src="https://i.postimg.cc/9MDvr4FJ/header.png"
              alt="Hayaan Travel Solutions"/></div>
     <div class="content">
-        <p>Dear [Customer Name],</p>
+        <p>Dear <span th:text="${customerName}"></span>,</p>
         <p>Thank you for booking with Hayaan Travel Solutions. To confirm you ticket please pay the amount due.</p>
         <h3>Booking Details:</h3>
         <p><strong>Booking Reference: </strong> <span th:text="${pnr}"></span><br>
@@ -87,7 +87,7 @@
     <div class="footer">
         <p>If you need assistance, contact us at info@hayaantravel.com.</p>
         <p>Best regards,<br>Hayaan Travel Solutions Team</p>
-        <img src="../static/images/footer.png" th:src="@{images/footer.png}"
+        <img src="https://i.postimg.cc/cHPPYsvZ/footer.png"
              alt="Hayaan Travel Solutions"/>
     </div>
 </div>

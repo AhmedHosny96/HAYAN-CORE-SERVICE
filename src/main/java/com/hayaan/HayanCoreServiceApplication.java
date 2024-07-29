@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -21,6 +22,8 @@ import java.util.concurrent.CompletableFuture;
 @EnableAsync
 @EnableCaching
 @EnableScheduling
+
+@EntityScan(basePackageClasses = {HayanCoreServiceApplication.class})
 public class HayanCoreServiceApplication implements CommandLineRunner {
 
 
@@ -29,9 +32,9 @@ public class HayanCoreServiceApplication implements CommandLineRunner {
 
     @Bean
     public ModelMapper modelMapper() {
+
         return new ModelMapper();
     }
-
 
     public static void main(String[] args) {
 
