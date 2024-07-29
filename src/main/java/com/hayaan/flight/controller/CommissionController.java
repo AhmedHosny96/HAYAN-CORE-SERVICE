@@ -2,8 +2,11 @@ package com.hayaan.flight.controller;
 
 
 import com.hayaan.dto.CustomResponse;
+import com.hayaan.flight.object.FlightType;
 import com.hayaan.flight.object.dto.CreateCommissionDto;
 import com.hayaan.flight.object.dto.CreateCommissionTypeDto;
+import com.hayaan.flight.object.dto.UpdateClientCommissionDto;
+import com.hayaan.flight.object.dto.UserCommissionResponse;
 import com.hayaan.flight.object.entity.Commission;
 import com.hayaan.flight.object.entity.CommissionType;
 import com.hayaan.flight.service.CommissionService;
@@ -26,7 +29,7 @@ public class CommissionController {
 
     @PostMapping("/commissions")
     public ResponseEntity<CustomResponse> createCommission(@RequestBody CreateCommissionDto createCommissionDto) {
-        CustomResponse response = commissionService.createCommission(createCommissionDto);
+        CustomResponse response = commissionService.commissionSetUp(createCommissionDto);
         return ResponseEntity.status(response.status()).body(response);
     }
 
@@ -36,8 +39,19 @@ public class CommissionController {
         return ResponseEntity.ok(commissions);
     }
 
-    @PostMapping("/commission-types")
+    @GetMapping("/commissions/user/{userId}")
+    public ResponseEntity<UserCommissionResponse> getCommissionByUser(@PathVariable Long userId) {
+        UserCommissionResponse commissionByUser = commissionService.getCommissionByUser(userId);
+        return ResponseEntity.status(commissionByUser.getStatus()).body(commissionByUser);
+    }
 
+    @PutMapping("/commissions/user")
+    public ResponseEntity<CustomResponse> updateClientCommission(@RequestParam Long userId, @RequestParam FlightType flightType, @RequestParam Double amount) {
+        CustomResponse customResponse = commissionService.updateClientCommission(userId, flightType, amount);
+        return ResponseEntity.status(customResponse.status()).body(customResponse);
+    }
+
+    @PostMapping("/commission-types")
     public ResponseEntity<CustomResponse> createCommissionType(@RequestBody CreateCommissionTypeDto commissionTypeDto) {
         CustomResponse response = commissionService.createCommissionType(commissionTypeDto);
         return ResponseEntity.status(response.status()).body(response);
@@ -50,13 +64,13 @@ public class CommissionController {
     }
 
     @PutMapping("/commission-types/{id}")
-    public ResponseEntity<CustomResponse> updateCommissionType(@PathVariable int id, @RequestBody CreateCommissionTypeDto updateCommissionTypeDto) {
+    public ResponseEntity<CustomResponse> updateCommissionType(@PathVariable Long id, @RequestBody CreateCommissionTypeDto updateCommissionTypeDto) {
         CustomResponse response = commissionService.updateCommissionType(id, updateCommissionTypeDto);
         return ResponseEntity.status(response.status()).body(response);
     }
 
     @GetMapping("/commission-types/{id}")
-    public ResponseEntity<CommissionType> getCommissionTypeById(@PathVariable int id) {
+    public ResponseEntity<CommissionType> getCommissionTypeById(@PathVariable Long id) {
         Optional<CommissionType> commissionType = commissionService.getCommissionTypeById(id);
         return commissionType.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }

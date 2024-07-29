@@ -52,32 +52,32 @@
 <body>
 <div class="container">
     <div class="header">
-        <img src="../static/images/header.png" th:src="@{images/header.png}"
-             alt="Hayaan Travel Solutions"/></div>
-    <div class="content">
-        <p>Dear <span th:text="${customerName}"></span>,</p>
-        <p>Thank you for booking with Hayaan Travel Solutions. Your booking has been successfully confirmed.</p>
-        <h3>Booking Details:</h3>
-        <p><strong>Booking Reference:</strong> <span th:text="${pnr}"></span><br>
-            <strong>Name:</strong><span th:text="${customerName}"></span><br>
-            <strong>Email:</strong><span th:text="${customerEmail}"></span></p>
-        <div class="trip-summary">
-            <h3>Trip Summary:</h3>
-            <p><strong>Passengers: </strong> <span th:text="${noOfPassengers}"></span> <br>
-                <strong>Origin: </strong> <span th:text="${origin}"></span><br>
-                <strong>Departure date and time: </strong> <span th:text="${departureDateAndTime}"></span><br>
-                <strong>Destination: </strong> <span th:text="${destination}"></span><br>
-                <strong>Arrival date and time: </strong> <span th:text="${arrivalDateAndTime}"></span><br>
-                <strong>Flight number: </strong> <span th:text="${flightNumber}"></span><br>
-                <strong>Class: </strong> <span th:text="${class}"></span><br>
+        <img src="https://i.postimg.cc/9MDvr4FJ/header.png"
+             alt="Hayaan Travel Solutions"/>
+        <div class="content">
+            <p>Dear <span th:text="${customerName}"></span>,</p>
+            <p>Thank you for booking with Hayaan Travel Solutions. Your booking has been successfully confirmed.</p>
+            <h3>Booking Details:</h3>
+            <p><strong>Booking Reference:</strong> <span th:text="${pnr}"></span><br>
+                <strong>Name:</strong><span th:text="${customerName}"></span><br>
+                <strong>Email:</strong><span th:text="${customerEmail}"></span></p>
+            <div class="trip-summary">
+                <h3>Trip Summary:</h3>
+                <p><strong>Passengers: </strong> <span th:text="${noOfPassengers}"></span> <br>
+                    <strong>Origin: </strong> <span th:text="${origin}"></span><br>
+                    <strong>Departure date and time: </strong> <span th:text="${departureDateAndTime}"></span><br>
+                    <strong>Destination: </strong> <span th:text="${destination}"></span><br>
+                    <strong>Arrival date and time: </strong> <span th:text="${arrivalDateAndTime}"></span><br>
+                    <strong>Flight number: </strong> <span th:text="${flightNumber}"></span><br>
+                    <strong>Class: </strong> <span th:text="${class}"></span><br>
+            </div>
+        </div>
+        <div class="footer">
+            <p>If you have any questions, feel free to contact us at [Contact Information].</p>
+            <p>Safe travels!<br>Best regards,<br>Hayaan Travel Solutions Team</p>
+            <img src="https://i.postimg.cc/cHPPYsvZ/footer.png"
+                 alt="Hayaan Travel Solutions"/>
         </div>
     </div>
-    <div class="footer">
-        <p>If you have any questions, feel free to contact us at [Contact Information].</p>
-        <p>Safe travels!<br>Best regards,<br>Hayaan Travel Solutions Team</p>
-        <img src="../static/images/footer.png" th:src="@{images/footer.png}"
-             alt="Hayaan Travel Solutions"/>
-    </div>
-</div>
 </body>
 </html>

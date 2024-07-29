@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface CommissionTypeRepo extends JpaRepository<CommissionType, Integer> {
+public interface CommissionTypeRepo extends JpaRepository<CommissionType, Long> {
 
     Optional<CommissionType> findByType(String type);
 

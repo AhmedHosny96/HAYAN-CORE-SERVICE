@@ -1,7 +1,9 @@
 package com.hayaan.auth.service;
 
+import com.hayaan.auth.object.dto.ChangePasswordDto;
 import com.hayaan.auth.object.dto.CreateRoleDto;
 import com.hayaan.auth.object.dto.CreateUserDto;
+import com.hayaan.auth.object.dto.UserDetailsResp;
 import com.hayaan.auth.object.entity.Role;
 import com.hayaan.auth.object.entity.User;
 import com.hayaan.auth.repo.RoleRepo;
@@ -42,7 +44,6 @@ public class UserService {
 
     private final NotificationService notificationService;
 
-
     // TODO: 2/14/2024 USER AND USER ROLE ALL RELATED FEATURES
 
     // ROLES
@@ -72,24 +73,95 @@ public class UserService {
         return new CustomResponse(200, "Role created successfully", null);
     }
 
+    // TODO USER BY ID FOR PROFILE
 
-    // USERS
+    public UserDetailsResp getUserDetails(Long userId) {
+
+        Optional<User> byId = userRepository.findById(userId);
+
+        if (!byId.isPresent()) {
+
+            return UserDetailsResp.builder()
+                    .status(400)
+                    .message("Invalid User ID")
+                    .build();
+        }
+
+
+        User user = byId.get();
+
+        return UserDetailsResp.builder()
+                .status(200)
+                .message("Success")
+                .user(user)
+                .build();
+    }
+
+    // CHANGE PASSWORD
+
+    public CustomResponse changePassword(Long userId, ChangePasswordDto changePasswordDto) {
+
+
+        Optional<User> byId = userRepository.findById(userId);
+
+
+        if (!byId.isPresent()) {
+            return new CustomResponse(400, "Invalid User ID", null);
+        }
+
+        User existingUser = byId.get();
+
+        boolean matches = passwordEncoder.matches(changePasswordDto.oldPassword(), existingUser.getPassword());
+
+        if (!matches) {
+            return new CustomResponse(400, "Wrong old password", null);
+        }
+
+
+        existingUser.setPassword(changePasswordDto.newPassword());
+        existingUser.setStatus(1); // active
+        existingUser.setPasswordChanged(true);
+
+        userRepository.save(existingUser);
+
+        return new CustomResponse(200, "Password changed successfully", null);
+
+    }
+
+
+    // CREATE NEW USER
     public CustomResponse createUser(CreateUserDto userDto) throws MessagingException {
+
+
+        Optional<User> byUsername = userRepository.findByUsername(userDto.username());
+
+        if (byUsername.isPresent()) {
+            return new CustomResponse(400, "Username is taken", null);
+
+        }
+
+        Optional<User> byEmail = userRepository.findByEmail(userDto.email());
+
+        if (byEmail.isPresent()) {
+            return new CustomResponse(400, "Email ID is taken", null);
+
+        }
+
+        Optional<User> byPhoneNumber = userRepository.findByPhoneNumber(userDto.email());
+
+        if (byPhoneNumber.isPresent()) {
+            return new CustomResponse(400, "Phone number is taken", null);
+        }
+
 
         String generatedPassword = utilService.generatePassword();
 
         log.info("GENERATED PASSWORD : {}", generatedPassword);
         String hashedPassword = passwordEncoder.encode(generatedPassword);
 
-        var agent = agentRepo.findById(userDto.agentId());
-
-
         var role = roleRepo.findById(userDto.roleId());
 
-        if (!agent.isPresent()) {
-            return new CustomResponse(400, "AgentId not found", null);
 
-        }
         if (!role.isPresent()) {
             return new CustomResponse(400, "RoleId not found", null);
 
@@ -100,25 +172,31 @@ public class UserService {
                 .email(userDto.email())
                 .phoneNumber(userDto.phoneNumber())
                 .fullName(userDto.fullName())
-                .agent(agent.get())
+                .agent(null)
                 .role(role.get())
-                .status(0)
-                .firstLogin(true)
+                .status(0) // 0 : created , 1: active , 2 :inactive
+                .isPasswordChanged(false)
                 .createdDate(LocalDateTime.now())
                 .password(hashedPassword)
                 .build();
+
         // Save the user
+
         userRepository.save(user);
 
         // send email
+
         Context context = new Context();
         context.setVariable("username", userDto.username());
         context.setVariable("otp", generatedPassword);
         context.setVariable("currentYear", LocalDate.now().getYear());
+
         notificationService.sendMail(userDto.email(), "Onetime password", "user-credentials", context);
         // send sms
         String smsBody = "Dear " + userDto.username() + ", your one-time password is: " + generatedPassword + " Remember to change it after login.";
+
         notificationService.sendSms(user.getPhoneNumber(), smsBody);
+
 
         return new CustomResponse(200, "User created successfully", null);
 
