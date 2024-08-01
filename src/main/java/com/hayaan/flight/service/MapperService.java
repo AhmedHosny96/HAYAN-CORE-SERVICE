@@ -1,6 +1,7 @@
 package com.hayaan.flight.service;
 
 import com.hayaan.config.UtilService;
+import com.hayaan.flight.object.FlightType;
 import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.dto.booking.TravelerResponse;
 import com.hayaan.flight.object.dto.flight.*;
@@ -18,6 +19,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,6 +42,9 @@ public class MapperService {
 
     private final UtilService utilService;
 
+    private final CommissionService commissionService;
+    private final CurrencyService currencyService;
+
 
     // FLIGHT SEARCH MAPPINGS
 
@@ -59,10 +64,10 @@ public class MapperService {
                 .airlineName(response.optString("carrier"))
                 .flightNumber(response.optString("flightNumber"))
                 .equipment(response.optString("equipment"))
-                .departureDate(LocalDate.parse(response.optString("departureTime"), DATE_TIME_FORMATTER))
+                .departureDateTime(LocalDateTime.parse(response.optString("departureTime"), DATE_TIME_FORMATTER))
                 .arrivalTime(arrivalTimeString)
                 .departureTime(departureTimeString)
-                .arrivalDate(LocalDate.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER))
+                .arrivalDateTime(LocalDateTime.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER))
                 .flightDuration(response.optInt("flightTime") == 0 ? utilService.convertStringToDuration(response.optInt("travelTime")) :
                         utilService.convertStringToDuration(response.optInt("flightTime")))
                 .build();
@@ -75,15 +80,12 @@ public class MapperService {
         String currency = priceKeys.optString("basePrice").substring(0, 3);
         double originalPrice = Double.parseDouble(priceKeys.optString("basePrice").substring(3));
         double taxes = Double.parseDouble(priceKeys.optString("taxes").substring(3));
-        double commission = 100.0;
-
-        double priceAfterTaxAndMarkup = originalPrice + taxes + commission;
 
         PriceInfoResponse priceInfoResponse = PriceInfoResponse.builder()
-                .originalPrice(originalPrice + taxes)
+//                .originalPrice(originalPrice + taxes)
 //                .taxes(taxes)
-                .commission(commission)
-                .priceAfterTaxAndCommission(priceAfterTaxAndMarkup)
+//                .commission(commission)
+//                .priceAfterTaxAndCommission(priceAfterTaxAndMarkup)
                 .currency(currency)
                 .build();
 
@@ -239,12 +241,12 @@ public class MapperService {
                     }
 
                     if (k == 0) {
-                        airInfoResponse.setDepartureDate(LocalDate.parse(flightSegment.getString("DepartureDateTime").substring(0, 10)));
+                        airInfoResponse.setDepartureDateTime(LocalDateTime.parse(flightSegment.getString("DepartureDateTime").substring(0, 10)));
                         airInfoResponse.setDepartureTime(flightSegment.getString("DepartureDateTime").substring(11, 16));
                     }
 
                     if (k == originDestinationOption.length() - 1) {
-                        airInfoResponse.setArrivalDate(LocalDate.parse(flightSegment.getString("ArrivalDateTime").substring(0, 10)));
+                        airInfoResponse.setArrivalDateTime(LocalDateTime.parse(flightSegment.getString("ArrivalDateTime").substring(0, 10)));
                         airInfoResponse.setArrivalTime(flightSegment.getString("ArrivalDateTime").substring(11, 16));
                     }
                 }
@@ -263,9 +265,17 @@ public class MapperService {
                 airInfoResponse.setFlightDuration(totalDuration);
                 airInfoResponse.setTransitFlight(transitList);
                 airInfoResponse.setCurrency(fareItinerary.getJSONObject("AirItineraryFareInfo").getJSONObject("ItinTotalFares").getJSONObject("TotalFare").getString("CurrencyCode"));
-                airInfoResponse.setFareInfo(extractFareInfo(fareItinerary.getJSONObject("AirItineraryFareInfo")));
                 airInfoResponse.setBaggageInfo(extractBaggageInfo(fareItinerary.getJSONObject("AirItineraryFareInfo")));
                 airInfoResponse.setAirlineLogoUrl(fareItinerary.optString("AirlineLogo"));
+
+
+                // check air flight type domestic or international
+
+                boolean internationalFlight = airDetailsService.isInternationalFlight(origin, destination);
+
+                FlightType flightType = internationalFlight ? FlightType.International : FlightType.Domestic;
+
+                airInfoResponse.setFareInfo(extractFareInfoAndAddCommission(fareItinerary.getJSONObject("AirItineraryFareInfo"), flightType));
 
                 airInfoList.add(airInfoResponse);
 
@@ -315,19 +325,36 @@ public class MapperService {
         return transitDetails;
     }
 
-    private List<PriceInfoResponse> extractFareInfo(JSONObject airItineraryFareInfo) {
+    private List<PriceInfoResponse> extractFareInfoAndAddCommission(JSONObject airItineraryFareInfo, FlightType flightType) {
         JSONObject itinTotalFares = airItineraryFareInfo.getJSONObject("ItinTotalFares");
         JSONObject totalFare = itinTotalFares.getJSONObject("TotalFare");
         JSONObject baseFare = itinTotalFares.getJSONObject("BaseFare");
         JSONObject totalTax = itinTotalFares.getJSONObject("TotalTax");
         JSONObject penaltyDetails = airItineraryFareInfo.getJSONArray("FareBreakdown").getJSONObject(0).getJSONObject("PenaltyDetails");
 
+        double commission = commissionService.calculateCommission(totalFare.getDouble("Amount"), flightType);
+
+        String fromCurrency = totalFare.optString("CurrencyCode");
+
+        double changePenaltyAmount = penaltyDetails.getDouble("ChangePenaltyAmount");
+
+        double refundPenaltyAmount = penaltyDetails.getDouble("RefundPenaltyAmount");
+
+        double baseFareAmount = baseFare.getDouble("Amount");
+
+
+        double rate = currencyService.convertCurrency(fromCurrency.trim(), "ETB");
+
+        double totalAmount = airDetailsService.roundNumber(totalFare.getDouble("Amount") * rate + commission);
+
         PriceInfoResponse priceInfo = PriceInfoResponse.builder()
-                .taxAmount(totalTax.getDouble("Amount"))
-                .baseFareAmount(baseFare.getDouble("Amount"))
-                .totalAmount(totalFare.getDouble("Amount"))
-                .changePenaltyAmount(penaltyDetails.getDouble("ChangePenaltyAmount"))
-                .refundPenaltyAmount(penaltyDetails.getDouble("RefundPenaltyAmount"))
+                .currency("ETB")
+                .taxAmount(airDetailsService.roundNumber(totalTax.getDouble("Amount") * rate))
+                .commissionAmount(commission)
+                .baseFareAmount(airDetailsService.roundNumber(baseFareAmount * rate))
+                .totalAmount(totalAmount)
+                .changePenaltyAmount(airDetailsService.roundNumber(changePenaltyAmount * rate))
+                .refundPenaltyAmount(airDetailsService.roundNumber(refundPenaltyAmount * rate))
                 .refundAllowed(penaltyDetails.getBoolean("RefundAllowed"))
                 .changeAllowed(penaltyDetails.getBoolean("ChangeAllowed"))
                 .build();

@@ -81,7 +81,7 @@ public class FlightController {
     @GetMapping("/flight") // confirms ticket in travel port
     @Tag(name = "Flight Details", description = "Retrieve flight details by PNR code")
     public ResponseEntity<FlightByPnrCodeResponse> getFlightByPnrCode(@RequestParam("pnrCode") String pnrCode) {
-        FlightByPnrCodeResponse flightByPnr = flightLogicService.getTripDetails(pnrCode);
+        FlightByPnrCodeResponse flightByPnr = flightLogicService.getTripInfo(pnrCode);
         return new ResponseEntity<>(flightByPnr, HttpStatusCode.valueOf(flightByPnr.getStatus()));
     }
 

@@ -78,7 +78,7 @@ public class AutomatedNotificationService {
                     context.setVariable("departureDateAndTime", formattedDepartureDate);
                     context.setVariable("destination", ticketHistory.getDestination());
                     context.setVariable("arrivalDateAndTime", formattedArrivalDate);
-                    context.setVariable("flightNumber", ticketHistory.getGoflightNumber());
+                    context.setVariable("flightNumber", ticketHistory.getFlightNumber());
                     context.setVariable("class", "ECONOMY");
                     context.setVariable("ticketAmount", ticketHistory.getTicketAmount());
 
@@ -167,7 +167,7 @@ public class AutomatedNotificationService {
                             context.setVariable("departureDateAndTime", formattedDepartureDate);
                             context.setVariable("destination", ticketHistory.getDestination());
                             context.setVariable("arrivalDateAndTime", formattedArrivalDate);
-                            context.setVariable("flightNumber", ticketHistory.getGoflightNumber());
+                            context.setVariable("flightNumber", ticketHistory.getFlightNumber());
                             context.setVariable("class", "ECONOMY");
                             context.setVariable("ticketAmount", ticketHistory.getTicketAmount());
 
@@ -257,7 +257,7 @@ public class AutomatedNotificationService {
                         context.setVariable("departureDateAndTime", formattedDepartureDate);
                         context.setVariable("destination", ticketHistory.getDestination());
                         context.setVariable("arrivalDateAndTime", formattedArrivalDate);
-                        context.setVariable("flightNumber", ticketHistory.getGoflightNumber());
+                        context.setVariable("flightNumber", ticketHistory.getFlightNumber());
                         context.setVariable("class", "ECONOMY");
                         context.setVariable("ticketAmount", ticketHistory.getTicketAmount());
 
@@ -338,7 +338,7 @@ public class AutomatedNotificationService {
                     context.setVariable("departureDateAndTime", formattedDepartureDate);
                     context.setVariable("destination", ticketHistory.getDestination());
                     context.setVariable("arrivalDateAndTime", formattedArrivalDate);
-                    context.setVariable("flightNumber", ticketHistory.getGoflightNumber());
+                    context.setVariable("flightNumber", ticketHistory.getFlightNumber());
                     context.setVariable("class", "ECONOMY");
                     context.setVariable("ticketAmount", ticketHistory.getTicketAmount());
 

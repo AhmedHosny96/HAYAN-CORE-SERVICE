@@ -14,12 +14,14 @@ import com.hayaan.flight.object.entity.CommissionType;
 import com.hayaan.flight.repo.CommissionRepo;
 import com.hayaan.flight.repo.CommissionTypeRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommissionService {
@@ -173,17 +175,30 @@ public class CommissionService {
     }
 
     //
-    public double calculateCommission(double price) {
-        // Retrieve commission rate from the database
-        CommissionType commission = commissionTypeRepo.findFirstByOrderById();
+    public double calculateCommission(double price, FlightType flightType) {
+        // Retrieve commission details from the repository
+        List<Commission> commissions = commissionRepo.findByFlightTypeAndUserType(flightType, "ADMIN");
 
-        if (commission != null) {
-            // Calculate commission based on percentage rate
-            double percentageRate = 10;
-            double commissionAmount = price * (percentageRate / 100.0);
-            return Math.round(commissionAmount * 100.0) / 100.0; // Round to 2 decimal places
-        } else {
-            throw new IllegalArgumentException("Commission rate not found in the database.");
+        if (commissions.isEmpty()) {
+            throw new IllegalArgumentException("Commission not found for the given flight type and user type.");
         }
+
+        for (Commission commission : commissions) {
+            CommissionType commissionType = commission.getCommissionType();
+            double amount = commission.getAmount();
+
+            String type = commissionType.getType();
+
+            if (type.equalsIgnoreCase("FIXED")) {
+
+                return amount; // Fixed commission amount
+            } else if (type.equalsIgnoreCase("PERCENTAGE")) {
+
+                return Math.round(price * (amount / 100.0) * 100.0) / 100.0; // Percentage commission
+            }
+        }
+
+        throw new IllegalArgumentException("Invalid commission type.");
     }
+
 }

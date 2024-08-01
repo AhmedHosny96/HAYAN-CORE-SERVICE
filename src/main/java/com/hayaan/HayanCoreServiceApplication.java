@@ -1,6 +1,9 @@
 package com.hayaan;
 
+import com.hayaan.flight.object.entity.Currency;
+import com.hayaan.flight.repo.CurrencyRepository;
 import com.hayaan.notification.NotificationService;
+import jakarta.annotation.PostConstruct;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,6 +19,8 @@ import org.thymeleaf.context.Context;
 import javax.management.Notification;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @SpringBootApplication
@@ -35,6 +40,31 @@ public class HayanCoreServiceApplication implements CommandLineRunner {
 
         return new ModelMapper();
     }
+
+    @Autowired
+    private CurrencyRepository currencyRepository;
+
+
+//    @PostConstruct
+//    public void insertCurrencies() {
+//
+//        List<Currency> currencies = Arrays.asList(
+//                new Currency("Ethiopian Birr", "ETB"),
+//                new Currency("US Dollar", "USD"),
+//                new Currency("Euro", "EUR"),
+//                new Currency("British Pound", "GBP"),
+//                new Currency("Japanese Yen", "JPY"),
+//                new Currency("Swiss Franc", "CHF"),
+//                new Currency("Canadian Dollar", "CAD"),
+//                new Currency("Australian Dollar", "AUD"),
+//                new Currency("New Zealand Dollar", "NZD"),
+//                new Currency("Chinese Yuan", "CNY"),
+//                new Currency("Indian Rupee", "INR")
+//        );
+//
+//        // Save all currencies to the database
+//        currencyRepository.saveAll(currencies);
+//    }
 
     public static void main(String[] args) {
 
