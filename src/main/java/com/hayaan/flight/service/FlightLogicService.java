@@ -3,6 +3,7 @@ package com.hayaan.flight.service;
 
 import com.hayaan.config.AsyncHttpConfig;
 import com.hayaan.dto.CustomResponse;
+import com.hayaan.flight.object.FlightType;
 import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.dto.booking.*;
 import com.hayaan.flight.object.dto.flight.AirInfoResponse;
@@ -25,9 +26,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +43,15 @@ public class FlightLogicService {
     private final MapperService mapperService;
 
     private final TicketHistoryRepo ticketHistoryRepo;
-    ;
+
+    private final AirDetailsService airDetailsService;
+    private final CommissionService commissionService;
 
     private final FlightSearchRequestContext flightSearchRequestContext;
 
-
     private final TransactionService transactionService;
+
+    private final CurrencyService currencyService;
 
     private final PaymentRepository paymentRepository;
     private final AirportRepository airportRepository;
@@ -295,17 +299,38 @@ public class FlightLogicService {
                     }
                 }
             }
+
+            Double originalTicketPrice = Double.valueOf(airPriceItem.optString("Amount"));
+
+
+            // calculate commission
+
+            boolean isInternationalFlight = airDetailsService.isInternationalFlight(origin, destination);
+
+            FlightType flightType = isInternationalFlight ? FlightType.International : FlightType.Domestic;
+
+            double commission = commissionService.calculateCommission(originalTicketPrice, flightType);
+
+            // convert currency
+
+            double rate = currencyService.convertCurrency("USD", "ETB");
+
+            double totalPrice = airDetailsService.roundNumber(originalTicketPrice * rate);
+
             TicketHistory ticketHistory = TicketHistory.builder()
                     .pnr(pnr)
                     .origin(origin)
                     .destination(destination)
                     .departureDateTime(departureDateTime)
                     .arrivalDateTime(arrivalDateTime)
-                    .goflightNumber(goFlightNumber)
-                    .returnFlightNumber(returnFlightNumber)
-                    .ticketAmount(Double.valueOf(airPriceItem.optString("Amount")))
+                    .flightNumber(goFlightNumber)
+//                    .returnFlightNumber(returnFlightNumber)
+                    .ticketAmount(totalPrice)
+                    .commissionAmount(commission)
+                    .totalAmount(totalPrice + commission)
                     .totalNoOfPassengers(passengers.size())
                     .createdDate(LocalDateTime.now())
+                    .currency("ETB")
                     .status(0) // pending
                     .statusDesc("PENDING")
                     .build();
@@ -317,7 +342,6 @@ public class FlightLogicService {
                     .pnr(bookingDetails.getPnrCode())
                     .build();
             transactionService.stagePayment(paymentStageDto);
-
 
         }
         BookingResponse bookingResponse = BookingResponse.builder()
@@ -364,6 +388,7 @@ public class FlightLogicService {
 
 
     }
+
 
     public FlightByPnrCodeResponse getTripDetails(String pnr) {
         var tripDetailsRequest = new JSONObject();
@@ -491,6 +516,77 @@ public class FlightLogicService {
                 .build();
     }
     // confirm ticket
+
+
+    public FlightByPnrCodeResponse getTripInfo(String bookingRef) {
+
+        Optional<TicketHistory> ticketHistoryRepoByPnr = ticketHistoryRepo.findByPnr(bookingRef);
+
+        if (!ticketHistoryRepoByPnr.isPresent()) {
+            return FlightByPnrCodeResponse.builder()
+                    .status(400)
+                    .message(String.format("Flight with reference %s not found", bookingRef))
+                    .build();
+        }
+
+        TicketHistory ticketHistory = ticketHistoryRepoByPnr.get();
+
+        if (ticketHistory.getStatus() == 2) {
+            return FlightByPnrCodeResponse.builder()
+                    .status(400)
+                    .message(String.format("Booking with reference %s expired, please book flight again", bookingRef))
+                    .build();
+        }
+
+        // Mapping AirInfoResponse
+        List<AirInfoResponse> airInfoResponses = ticketHistory.getPassengers().stream()
+                .map(passenger -> AirInfoResponse.builder()
+//                        .pnr(ticketHistory.getPnr())
+                        .origin(ticketHistory.getOrigin())
+                        .destination(ticketHistory.getDestination())
+                        .flightNumber(ticketHistory.getFlightNumber())
+                        .departureDateTime(ticketHistory.getDepartureDateTime())
+                        .arrivalDateTime(ticketHistory.getArrivalDateTime())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Mapping TravelerResponse (assuming similar structure to Passenger)
+        List<TravelerResponse> travelerResponses = ticketHistory.getPassengers().stream()
+                .map(passenger -> TravelerResponse.builder()
+                        .firstName(passenger.getFirstName())
+                        .middleName(passenger.getMiddleName())
+                        .lastName(passenger.getFirstName())
+                        .phoneNumber(passenger.getPhoneNumber())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Mapping PriceInfoResponse
+        PriceInfoResponse priceInfoResponse = PriceInfoResponse.builder()
+                .currency(ticketHistory.getCurrency().trim())
+                .baseFareAmount(ticketHistory.getTicketAmount())
+                .totalAmount(ticketHistory.getTotalAmount())
+                .commissionAmount(ticketHistory.getCommissionAmount())
+                // Add other relevant fields for price information
+                .build();
+
+        // Assuming BookingInfoResponse and PassengerType are also mappable
+//        List<BookingInfoResponse> bookingInfoResponses = //... map these appropriately
+//                List<PassengerType> passengerTypes = //... map these appropriately
+
+        // Building the final response
+        return FlightByPnrCodeResponse.builder()
+                .status(200)
+                .message("Success")
+                .pnrCode(ticketHistory.getPnr())
+                .version(1) // Example version, you might want to determine this differently
+                .bookingStatus(ticketHistory.getStatusDesc())
+                .travelers(travelerResponses)
+                .priceInfo(priceInfoResponse)
+                .airInfo(airInfoResponses)
+//                .bookingInfo(bookingInfoResponses)
+//                .passengerInfo(passengerTypes)
+                .build();
+    }
 
     public CustomResponse confirmTicket(String pnr) {
         // check the payment

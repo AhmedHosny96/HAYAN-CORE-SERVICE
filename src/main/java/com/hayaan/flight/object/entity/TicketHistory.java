@@ -44,6 +44,12 @@ public class TicketHistory {
     @Column(name = "CommissionAmount")
     private Double commissionAmount;
 
+    @Column(name = "TotalAmount")
+    private Double totalAmount;
+
+    @Column(name = "Currency")
+    private String currency;
+
     @Column(name = "DepartureDateTime")
     private LocalDateTime departureDateTime;
 
@@ -53,11 +59,8 @@ public class TicketHistory {
     @Column(name = "ReturnDateTime")
     private LocalDateTime returnDateTime;
 
-    @Column(name = "GoflightNumber")
-    private String goflightNumber; // airlinecode + flight number
-
-    @Column(name = "ReturnFlightNumber")
-    private String returnFlightNumber; // airlinecode + flight number
+    @Column(name = "FlightNumber")
+    private String flightNumber; // airlinecode + flight number
 
 
     @Column(name = "AirTransactionId")

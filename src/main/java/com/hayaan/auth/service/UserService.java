@@ -156,7 +156,7 @@ public class UserService {
 
         String generatedPassword = utilService.generatePassword();
 
-        log.info("GENERATED PASSWORD : {}", generatedPassword);
+        log.info("USER : {} GENERATED PASSWORD", userDto.email() );
         String hashedPassword = passwordEncoder.encode(generatedPassword);
 
         var role = roleRepo.findById(userDto.roleId());

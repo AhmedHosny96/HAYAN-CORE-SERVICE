@@ -215,9 +215,9 @@ public class TravelPortService {
                 airSegmentObj.put("carrier", airSegment.getAirlineName());
                 airSegmentObj.put("flightNumber", airSegment.getFlightNumber());
                 airSegmentObj.put("equipment", airSegment.getEquipment());
-                airSegmentObj.put("departureDate", airSegment.getDepartureDate());
+                airSegmentObj.put("departureDate", airSegment.getDepartureDateTime());
                 airSegmentObj.put("departureTime", airSegment.getDepartureTime());
-                airSegmentObj.put("arrivalDate", airSegment.getArrivalDate());
+                airSegmentObj.put("arrivalDate", airSegment.getArrivalDateTime());
                 airSegmentObj.put("arrivalTime", airSegment.getArrivalTime());
                 airSegmentObj.put("origin", airSegment.getOrigin());
                 airSegmentObj.put("destination", airSegment.getDestination());
@@ -484,7 +484,7 @@ public class TravelPortService {
 
         // calculate commision
 
-        double commission = commissionService.calculateCommission(priceInfoResponse.getOriginalPrice());
+//        double commission = commissionService.calculateCommission(priceInfoResponse.getOriginalPrice());
 
         // save ticket history ,
 
@@ -500,7 +500,7 @@ public class TravelPortService {
 
 //                .returnDate(returnDate)
                 .ticketAmount(priceInfoResponse.getOriginalPrice())
-                .commissionAmount(commission)
+//                .commissionAmount(commission)
                 .firstName(travelers.get(0).getFirstName())
                 .middleName(travelers.get(0).getMiddleName())
                 .lastName(travelers.get(0).getLastName())
@@ -647,4 +647,7 @@ public class TravelPortService {
 
         return new CustomResponse(200, "Flight Cancelled successfully", null);
     }
+
+
+
 }

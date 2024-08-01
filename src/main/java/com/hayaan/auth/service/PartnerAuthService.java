@@ -31,7 +31,7 @@ public class PartnerAuthService {
 
         User user = byUsername.get();
 
-        TokenBody tokenBody = new TokenBody(username, "PARTNER", user.getId(), null, user.getStatus());
+        TokenBody tokenBody = new TokenBody(user.getRole().getId(), user.getId(), user.getId());
 
         String token = jwtConfig.generateToken(tokenBody);
 

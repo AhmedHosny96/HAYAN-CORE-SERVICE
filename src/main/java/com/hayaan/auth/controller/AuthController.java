@@ -78,7 +78,6 @@ public class AuthController {
             throw new UsernameNotFoundException("invalid username or password");
         }
 
-
         // add role , agentId , status to token
 
         var currentUser = userRepository.findByUsername(authRequest.username()).get();
@@ -87,7 +86,7 @@ public class AuthController {
 
         Role role = roleRepo.findById(currentUser.getRole().getId()).get();
 
-        var tokenBody = new TokenBody(currentUser.getUsername(), role.getName(), currentUser.getId(), currentUser.getAgent().getId(), currentUser.getStatus());
+        var tokenBody = new TokenBody(currentUser.getRole().getId(), currentUser.getId(), currentUser.getAgent() == null ? null : currentUser.getAgent().getId());
 
         String token = jwtService.generateToken(tokenBody);
 
@@ -95,9 +94,11 @@ public class AuthController {
                 200,
                 "success",
                 authRequest.username(),
-                token
+                token,
+                currentUser.isPasswordChanged()
         );
         return new ResponseEntity<>(customResponse, HttpStatus.OK);
-
     }
+
+
 }
