@@ -21,7 +21,7 @@ public class Commission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "CreatedById", nullable = false)
@@ -37,6 +37,10 @@ public class Commission {
 
     @Column(name = "Amount")
     private Double amount;
+
+
+    @Column(name = "Currency")
+    private String currency;
 
     @Column(name = "Status")
     private Integer status;

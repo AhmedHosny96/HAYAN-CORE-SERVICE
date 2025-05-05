@@ -5,6 +5,7 @@ import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.AirPriceSolution;
 import com.hayaan.flight.object.dto.AirlineListResp;
 import com.hayaan.flight.object.dto.AirportListResp;
+import com.hayaan.flight.object.dto.AllCountryResp;
 import com.hayaan.flight.object.dto.booking.BookingRequestDto;
 import com.hayaan.flight.object.dto.booking.BookingResponse;
 import com.hayaan.flight.object.dto.booking.FlightByPnrCodeResponse;
@@ -12,6 +13,7 @@ import com.hayaan.flight.object.dto.booking.FlightByPnrDto;
 import com.hayaan.flight.object.dto.flight.FlightPriceSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchResponse;
+import com.hayaan.flight.service.CountryService;
 import com.hayaan.flight.service.FlightLogicService;
 import com.hayaan.flight.service.TravelPortService;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -21,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +41,16 @@ public class FlightController {
 
     private final TravelPortService travelPortService;
     private final FlightLogicService flightLogicService;
+
+    private final CountryService countryService;
+
+    @GetMapping("/countries")
+    public ResponseEntity<AllCountryResp> getAllCountries() {
+        AllCountryResp allCountries = countryService.getAllCountries();
+
+        return new ResponseEntity<>(allCountries, HttpStatusCode.valueOf(allCountries.getStatus()));
+
+    }
 
 
     @GetMapping("/airports")
@@ -88,7 +101,7 @@ public class FlightController {
 
     @PostMapping("/flights/availability")
     @Tag(name = "Flight Availability", description = "Search all available flights")
-    public ResponseEntity<FlightSearchResponse> searchAllAvailableFlights(@RequestBody FlightSearchDto flightSearchDto) {
+    public ResponseEntity<FlightSearchResponse> searchAllAvailableFlights(@Valid @RequestBody FlightSearchDto flightSearchDto) {
         FlightSearchResponse flightSearchResponse = flightLogicService.searchFlight(flightSearchDto);
         return new ResponseEntity<>(flightSearchResponse, HttpStatusCode.valueOf(flightSearchResponse.getStatus()));
     }
@@ -102,7 +115,7 @@ public class FlightController {
 
     @PostMapping("/flight/booking")
     @Tag(name = "Flight Booking", description = "Book a flight")
-    public ResponseEntity<?> bookFlight(@RequestBody BookingRequestDto bookingRequestDto) {
+    public ResponseEntity<?> bookFlight(@Valid @RequestBody BookingRequestDto bookingRequestDto) {
         BookingResponse bookingResponse = flightLogicService.bookFlight(bookingRequestDto);
         return new ResponseEntity<>(bookingResponse, HttpStatusCode.valueOf(bookingResponse.getStatus()));
     }

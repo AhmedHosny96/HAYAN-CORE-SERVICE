@@ -1,5 +1,7 @@
 package com.hayaan.flight.object.dto;
 
+import com.hayaan.auth.object.entity.User;
+import com.hayaan.flight.object.entity.Agent;
 import lombok.Builder;
 import lombok.Data;
 
@@ -26,7 +28,8 @@ public class TicketHistoryDto {
     private String phoneNumber;
     private String airlineId;
     private String flightNumber;
-    private Long userId;
+    private User user;
+    private Agent agent;
     private int totalNoOfPassengers;
     private String userType;
     private String document;

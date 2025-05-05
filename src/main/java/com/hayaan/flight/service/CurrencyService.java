@@ -3,15 +3,16 @@ package com.hayaan.flight.service;
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.CurrencyConversionListResp;
 import com.hayaan.flight.object.dto.CurrencyListResp;
+import com.hayaan.flight.object.dto.InsertConversionHistoryDb;
 import com.hayaan.flight.object.entity.Currency;
 import com.hayaan.flight.object.entity.CurrencyConversion;
+import com.hayaan.flight.object.entity.TicketConversionHistory;
 import com.hayaan.flight.repo.CurrencyConversionRepo;
 import com.hayaan.flight.repo.CurrencyRepository;
+import com.hayaan.flight.repo.TicketConversionHistoryRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,7 @@ public class CurrencyService {
 
     private final CurrencyConversionRepo currencyConversionRepo;
 
+    private final TicketConversionHistoryRepo ticketConversionHistoryRepo;
 
     // get all currencies
     public CurrencyListResp getAllCurrencies() {
@@ -114,7 +116,7 @@ public class CurrencyService {
 
         newConversion.setBaseCurrency(conversion.getBaseCurrency());
         newConversion.setTargetCurrency(conversion.getTargetCurrency());
-        newConversion.setConversionRate(conversion.getConversionRate());
+        newConversion.setRate(conversion.getRate());
         newConversion.setSource("MARKET");
         newConversion.setCreatedAt(LocalDateTime.now());
         newConversion.setDate(LocalDate.now());
@@ -129,7 +131,7 @@ public class CurrencyService {
             CurrencyConversion conversion = conversionOptional.get();
             conversion.setBaseCurrency(conversionDetails.getBaseCurrency());
             conversion.setTargetCurrency(conversionDetails.getTargetCurrency());
-            conversion.setConversionRate(conversionDetails.getConversionRate());
+            conversion.setRate(conversionDetails.getRate());
             conversion.setDate(conversionDetails.getDate());
             conversion.setSource(conversionDetails.getSource());
             currencyConversionRepo.save(conversion);
@@ -150,9 +152,24 @@ public class CurrencyService {
         }
 
         CurrencyConversion currencyConversion = byBaseCurrencyAndTargetCurrency.get();
-        double conversionRate = currencyConversion.getConversionRate();
-
+        double conversionRate = currencyConversion.getRate();
 
         return conversionRate;
     }
+
+
+    public void logTicketConversionHistoryToDb(InsertConversionHistoryDb insertConversionHistoryDb) {
+
+        var ticketConversionHis = TicketConversionHistory.builder()
+                .rate(insertConversionHistoryDb.getRate())
+                .baseCurrency(insertConversionHistoryDb.getBaseCurrency())
+                .targetCurrency(insertConversionHistoryDb.getTargetCurrency())
+                .originalAmount(insertConversionHistoryDb.getOriginalAmount())
+                .bookingReference(insertConversionHistoryDb.getBookingReference())
+                .amountAfter(insertConversionHistoryDb.getAmountAfter())
+                .build();
+
+        ticketConversionHistoryRepo.save(ticketConversionHis);
+    }
+
 }

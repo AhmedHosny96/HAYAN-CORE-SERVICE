@@ -25,7 +25,8 @@ public class TravelersDto {
     private PassengerType travelerType;
     private String idNo;
     private String nationality;
-    private String passportExpiryDate;
+    private LocalDate passportExpiryDate;
+    private String frequentFlyerNumber;
 
 
     @Data
@@ -33,7 +34,7 @@ public class TravelersDto {
     @AllArgsConstructor
     public static class PhoneNumber {
         private String phoneNumber;
-        private String areCode;
+        private String areaCode;
         private String cityCode;
         private String countryArea;
 

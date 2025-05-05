@@ -1,0 +1,72 @@
+server:
+  port: 8031
+
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: myalias
+
+servers:
+  test-url: http://localhost:8030
+  prod-url: http://196.188.172.182:8030
+
+spring:
+  application:
+    name: HAYAN-CORE-SERIVCE
+  main:
+    allow-circular-references: true
+  config:
+    import: file:env.properties
+  datasource:
+    url: ${DB-URL}
+    username: ${DB-USERNAME}
+    password: ${DB-PASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+
+  mail:
+    port: 587
+    host: smtp.gmail.com
+    username: ${MAIL-USERNAME}
+    password: ${MAIL-PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+sms:
+  endpoint: ${SMS-URL}
+  auth-url: http://192.168.100.55:8034/api/auth/login
+  username: ${SMS-USERNAME}
+  password: ${SMS-PASSWORD}
+
+travelPort:
+  endpoint: http://localhost:8080/api/adapter
+
+flightLogic:
+  endpoint: http://196.188.172.182:8080/hayaanapi/process
+
+payment:
+  endpoint: https://196.188.172.182:8154/api/v1/payment/request
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+template:
+  path: D:\\Apps\HAYAAN\HAYAN-CORE-SERVICE\\src\\main\\resources\\boarding-sample.pdf
+#  path: E:\\HAYAN-CORE-SERVICE\\boarding-sample.pdf

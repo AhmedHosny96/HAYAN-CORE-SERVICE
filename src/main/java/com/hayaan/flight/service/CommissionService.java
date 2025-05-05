@@ -6,9 +6,7 @@ import com.hayaan.auth.object.entity.User;
 import com.hayaan.auth.repo.UserRepository;
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.FlightType;
-import com.hayaan.flight.object.dto.CreateCommissionDto;
-import com.hayaan.flight.object.dto.CreateCommissionTypeDto;
-import com.hayaan.flight.object.dto.UserCommissionResponse;
+import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.entity.Commission;
 import com.hayaan.flight.object.entity.CommissionType;
 import com.hayaan.flight.repo.CommissionRepo;
@@ -65,6 +63,7 @@ public class CommissionService {
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .commissionType(type)
+                .currency(createCommissionDto.currency())
                 .UserType(role.getName())
                 .status(1)
                 .build();
@@ -96,6 +95,69 @@ public class CommissionService {
 
     public List<CommissionType> getAllCommissionTypes() {
         return commissionTypeRepo.findAll();
+    }
+
+    public CommissionResponse getCommissionById(Long commissionId) {
+
+        Optional<Commission> commissionOptional = commissionRepo.findById(commissionId);
+
+        if (!commissionOptional.isPresent()) {
+
+            return CommissionResponse.builder()
+                    .status(400)
+                    .message("commission not found")
+                    .commission(null)
+                    .build();
+        }
+
+        return
+                CommissionResponse.builder()
+                        .status(200)
+                        .message("success")
+                        .commission(commissionOptional.get())
+                        .build();
+
+    }
+
+    // upadte commision by id
+
+    public CustomResponse updateComission(Long commissionId, UpdateCommissionDto updateCommissionDto) {
+
+        Optional<Commission> byId = commissionRepo.findById(commissionId);
+
+        if (!byId.isPresent()) {
+            return new CustomResponse(400, "Invalid commission id", null);
+        }
+
+        Optional<User> userById = userRepository.findById(updateCommissionDto.userId());
+
+        if (!userById.isPresent()) {
+            return new CustomResponse(400, "Invalid user id", null);
+        }
+
+
+        Optional<CommissionType> commissionTypeRepoById = commissionTypeRepo.findById(updateCommissionDto.commissionTypeId());
+
+        if (!commissionTypeRepoById.isPresent()) {
+            return new CustomResponse(400, "Invalid commision type id", null);
+        }
+
+
+        Commission existingCommission = byId.get();
+
+        existingCommission.setAmount(updateCommissionDto.amount());
+        existingCommission.setUser(userById.get());
+        existingCommission.setCommissionType(commissionTypeRepoById.get());
+        existingCommission.setFlightType(updateCommissionDto.flightType());
+        existingCommission.setCurrency(updateCommissionDto.currency());
+
+
+        commissionRepo.save(existingCommission);
+
+        String message = String.format("Commission type %s 's amount is updated to %s successfully", existingCommission.getCommissionType().getType(), updateCommissionDto.amount());
+
+        return new CustomResponse(200, message, null);
+
     }
 
 
@@ -156,7 +218,6 @@ public class CommissionService {
 
     }
 
-
     public CustomResponse updateCommissionType(Long id, CreateCommissionTypeDto updateCommissionTypeDto) {
         Optional<CommissionType> optionalCommissionType = commissionTypeRepo.findById(id);
         if (optionalCommissionType.isEmpty()) {
@@ -175,9 +236,9 @@ public class CommissionService {
     }
 
     //
-    public double calculateCommission(double price, FlightType flightType) {
+    public double calculateCommission(double price, FlightType flightType, String userType) {
         // Retrieve commission details from the repository
-        List<Commission> commissions = commissionRepo.findByFlightTypeAndUserType(flightType, "ADMIN");
+        List<Commission> commissions = commissionRepo.findByFlightTypeAndUserType(flightType, userType);
 
         if (commissions.isEmpty()) {
             throw new IllegalArgumentException("Commission not found for the given flight type and user type.");
@@ -186,14 +247,11 @@ public class CommissionService {
         for (Commission commission : commissions) {
             CommissionType commissionType = commission.getCommissionType();
             double amount = commission.getAmount();
-
             String type = commissionType.getType();
 
             if (type.equalsIgnoreCase("FIXED")) {
-
                 return amount; // Fixed commission amount
             } else if (type.equalsIgnoreCase("PERCENTAGE")) {
-
                 return Math.round(price * (amount / 100.0) * 100.0) / 100.0; // Percentage commission
             }
         }

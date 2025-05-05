@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CommissionRepo extends JpaRepository<Commission, Integer> {
+public interface CommissionRepo extends JpaRepository<Commission, Long> {
 
     Optional<List<Commission>> findByUser(User user);
 

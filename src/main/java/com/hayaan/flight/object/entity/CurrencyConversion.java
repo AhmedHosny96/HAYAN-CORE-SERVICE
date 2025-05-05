@@ -30,8 +30,8 @@ public class CurrencyConversion {
     @Column(name = "TargetCurrency", nullable = false, length = 3)
     private String targetCurrency;
 
-    @Column(name = "ConversionRate", nullable = false)
-    private Double conversionRate;
+    @Column(name = "Rate", nullable = false)
+    private Double rate;
 
     @Column(name = "Date", nullable = false)
     private LocalDate date;

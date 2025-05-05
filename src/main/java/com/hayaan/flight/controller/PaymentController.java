@@ -1,6 +1,7 @@
 package com.hayaan.flight.controller;
 
 
+import com.hayaan.flight.object.dto.PaymentMethodResp;
 import com.hayaan.flight.object.dto.booking.BookingPaymentDto;
 import com.hayaan.flight.service.FlightPaymentService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,13 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
 
     private final FlightPaymentService flightPaymentService;
+
+
+    @GetMapping("/payments")
+    public ResponseEntity<?> getActivePaymentMethods() {
+        PaymentMethodResp allActivePaymentMethods = flightPaymentService.getAllActivePaymentMethods();
+        return ResponseEntity.ok(allActivePaymentMethods);
+    }
 
 
     // 1X0999

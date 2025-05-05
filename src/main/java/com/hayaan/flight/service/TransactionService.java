@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -27,14 +28,24 @@ public class TransactionService {
 
     @Transactional
     public TicketHistory saveTicketHistoryWithPassengers(TicketHistory ticketHistory, List<Passenger> passengers) {
+        // Check if a ticket with the same PNR already exists
+        Optional<TicketHistory> existingTicketHistory = ticketHistoryRepo.findByPnr(ticketHistory.getPnr());
+
+        if (existingTicketHistory.isPresent()) {
+            // If the ticket already exists, return the existing ticket history
+            return existingTicketHistory.get();
+        }
+
+        // Save the new ticket history if it doesn't exist
         TicketHistory savedTicketHistory = ticketHistoryRepo.save(ticketHistory);
 
+        // Save the associated passengers
         for (Passenger passenger : passengers) {
             passenger.setTicketHistory(savedTicketHistory);
             passengerRepo.save(passenger);
         }
 
-        return savedTicketHistory;
+        return savedTicketHistory; // Return the newly saved ticket history
     }
 
 
@@ -50,17 +61,10 @@ public class TransactionService {
                 .commissionAmount(ticketHistoryDto.getCommissionAmount())
                 .departureDateTime(ticketHistoryDto.getDepartureDateTime())
                 .returnDateTime(ticketHistoryDto.getReturnDateTime())
-//                .firstName(ticketHistoryDto.getFirstName())
-//                .middleName(ticketHistoryDto.getMiddleName())
-//                .lastName(ticketHistoryDto.getLastName())
-//                .email(ticketHistoryDto.getEmail())
-//                .phoneNumber(ticketHistoryDto.getPhoneNumber())
-//                .airlineId(ticketHistoryDto.getAirlineId())
+
                 .airTransactionId(ticketHistoryDto.getAirTransactionId())
-                .userId(ticketHistoryDto.getUserId())
-//                .userType(ticketHistoryDto.getUserType())
-//                .documentIdNumber(ticketHistoryDto.getDocumentIdNumber())
-//                .document(ticketHistoryDto.getDocument())
+                .user(ticketHistoryDto.getUser())
+                .agent(ticketHistoryDto.getAgent())
                 .status(0) // created
                 .createdDate(LocalDateTime.now())
                 .expireDate(ticketHistoryDto.getExpireDate())
@@ -71,6 +75,12 @@ public class TransactionService {
     }
 
     public void stagePayment(PaymentStageDto paymentStageDto) {
+        // Check if a payment with the same PNR already exists
+        boolean exists = paymentRepository.existsByPnr(paymentStageDto.getPnr());
+        if (exists) {
+            log.warn("Duplicate PNR detected: {}. Skipping insert.", paymentStageDto.getPnr());
+            return;
+        }
 
         Payment payment = Payment.builder()
                 .amount(paymentStageDto.getAmount())
@@ -85,10 +95,9 @@ public class TransactionService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        log.info("PAYMENT RECORD INSERTED : {}");
-
         paymentRepository.save(payment);
-
+        log.info("PAYMENT RECORD INSERTED : {}", payment.getPnr());
     }
+
 
 }

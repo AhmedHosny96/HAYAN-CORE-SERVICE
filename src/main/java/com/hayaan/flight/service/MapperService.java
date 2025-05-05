@@ -1,5 +1,6 @@
 package com.hayaan.flight.service;
 
+import com.hayaan.auth.service.UserService;
 import com.hayaan.config.UtilService;
 import com.hayaan.flight.object.FlightType;
 import com.hayaan.flight.object.dto.*;
@@ -24,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -42,6 +44,8 @@ public class MapperService {
 
     private final UtilService utilService;
 
+    private final UserService userService;
+
     private final CommissionService commissionService;
     private final CurrencyService currencyService;
 
@@ -56,21 +60,7 @@ public class MapperService {
         String departureDate = response.optString("departureTime");
         String departureTimeString = departureDate.substring(departureDate.indexOf('T') + 1);
 
-        return AirInfoResponse.builder()
-                .key(response.optString("key"))
-                .classOfService(response.optString("classOfService"))
-                .origin(response.optString("origin"))
-                .destination(response.optString("destination"))
-                .airlineName(response.optString("carrier"))
-                .flightNumber(response.optString("flightNumber"))
-                .equipment(response.optString("equipment"))
-                .departureDateTime(LocalDateTime.parse(response.optString("departureTime"), DATE_TIME_FORMATTER))
-                .arrivalTime(arrivalTimeString)
-                .departureTime(departureTimeString)
-                .arrivalDateTime(LocalDateTime.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER))
-                .flightDuration(response.optInt("flightTime") == 0 ? utilService.convertStringToDuration(response.optInt("travelTime")) :
-                        utilService.convertStringToDuration(response.optInt("flightTime")))
-                .build();
+        return AirInfoResponse.builder().key(response.optString("key")).classOfService(response.optString("classOfService")).origin(response.optString("origin")).destination(response.optString("destination")).airlineName(response.optString("carrier")).flightNumber(response.optString("flightNumber")).equipment(response.optString("equipment")).departureDate(LocalDate.parse(response.optString("departureTime"), DATE_TIME_FORMATTER)).arrivalTime(arrivalTimeString).departureTime(departureTimeString).arrivalDate(LocalDate.parse(response.optString("arrivalTime"), DATE_TIME_FORMATTER)).flightDuration(response.optInt("flightTime") == 0 ? utilService.convertStringToDuration(response.optInt("travelTime")) : utilService.convertStringToDuration(response.optInt("flightTime"))).build();
 
     }
 
@@ -86,8 +76,7 @@ public class MapperService {
 //                .taxes(taxes)
 //                .commission(commission)
 //                .priceAfterTaxAndCommission(priceAfterTaxAndMarkup)
-                .currency(currency)
-                .build();
+                .currency(currency).build();
 
         return priceInfoResponse;
     }
@@ -97,11 +86,7 @@ public class MapperService {
 
         JSONObject baggageINfo = response.getJSONObject(0).getJSONObject("baggageAllowance").getJSONObject("maxWeight");
 
-        return BaggageInfoResponse
-                .builder()
-                .value(baggageINfo.optInt("value"))
-                .unit(baggageINfo.optString("unit"))
-                .build();
+        return BaggageInfoResponse.builder().value(baggageINfo.optInt("value")).unit(baggageINfo.optString("unit")).build();
 
     }
 
@@ -109,32 +94,17 @@ public class MapperService {
 
     public HostTokenResponse mapToHostToken(JSONObject response) {
 
-        return HostTokenResponse.builder()
-                .key(response.optString("key"))
-                .value(response.optString("value"))
-                .build();
+        return HostTokenResponse.builder().key(response.optString("key")).value(response.optString("value")).build();
     }
 
     public BookingInfoResponse mapToBookingInfo(JSONObject response) {
 
-        return BookingInfoResponse.builder()
-                .bookingCode(response.optString("bookingCode"))
-                .cabinClass(response.optString("cabinClass"))
-                .segmentRef(response.optString("segmentRef"))
-                .fareInfoRef(response.optString("fareInfoRef"))
-                .hostTokenRef(response.optString("hostTokenRef"))
-                .build();
+        return BookingInfoResponse.builder().bookingCode(response.optString("bookingCode")).cabinClass(response.optString("cabinClass")).segmentRef(response.optString("segmentRef")).fareInfoRef(response.optString("fareInfoRef")).hostTokenRef(response.optString("hostTokenRef")).build();
     }
 
     public FareInfoResponse mapToFareInfo(JSONObject fareInfoObj) {
 
-        return FareInfoResponse.builder()
-                .key(fareInfoObj.optString("key"))
-                .fareBasis(fareInfoObj.optString("fareBasis"))
-                .passengerTypeCode(fareInfoObj.optString("passengerTypeCode"))
-                .origin(fareInfoObj.optString("origin"))
-                .destination(fareInfoObj.optString("destination"))
-                .build();
+        return FareInfoResponse.builder().key(fareInfoObj.optString("key")).fareBasis(fareInfoObj.optString("fareBasis")).passengerTypeCode(fareInfoObj.optString("passengerTypeCode")).origin(fareInfoObj.optString("origin")).destination(fareInfoObj.optString("destination")).build();
     }
 
     // RETRIVE BOOKING MAPPINGS
@@ -144,15 +114,7 @@ public class MapperService {
         for (int i = 0; i < travelerArray.length(); i++) {
             JSONObject travelerObj = travelerArray.getJSONObject(i);
 
-            TravelerResponse travelerResponse = TravelerResponse.builder()
-                    .prefix(travelerObj.getJSONObject("bookingTravelerName").optString("prefix"))
-                    .firstName(travelerObj.getJSONObject("bookingTravelerName").optString("first"))
-                    .middleName(travelerObj.getJSONObject("bookingTravelerName").optString("middle"))
-                    .lastName(travelerObj.getJSONObject("bookingTravelerName").optString("last"))
-                    .suffix(travelerObj.getJSONObject("bookingTravelerName").optString("suffix"))
-                    .location(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("location"))
-                    .phoneNumber(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("number"))
-                    .build();
+            TravelerResponse travelerResponse = TravelerResponse.builder().prefix(travelerObj.getJSONObject("bookingTravelerName").optString("prefix")).firstName(travelerObj.getJSONObject("bookingTravelerName").optString("first")).middleName(travelerObj.getJSONObject("bookingTravelerName").optString("middle")).lastName(travelerObj.getJSONObject("bookingTravelerName").optString("last")).suffix(travelerObj.getJSONObject("bookingTravelerName").optString("suffix")).location(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("location")).phoneNumber(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("number")).build();
 
             travelerResponses.add(travelerResponse);
         }
@@ -174,9 +136,7 @@ public class MapperService {
             int age = passengerTypeObject.optInt("age"); // Assuming 'age' is present in the JSON object
 
             // Create PassengerType object using the builder pattern
-            PassengerType passengerType = PassengerType.builder()
-                    .code(code)
-                    .age(age)
+            PassengerType passengerType = PassengerType.builder().code(code).age(age)
                     // Add other relevant fields here
                     .build();
 
@@ -190,7 +150,7 @@ public class MapperService {
 
     // FLIGHT LOGIC MAPPERS
 
-    public FlightSearchResponse mapToFareItineraries(JSONArray fareItineraries, String sessionId, String origin, String destination) {
+    public FlightSearchResponse mapToFareItineraries(JSONArray fareItineraries, String sessionId, String origin, String destination, String currency) {
         FlightSearchResponse flightSearchResponse = new FlightSearchResponse();
         List<DepartFlightResponse> onwardFlightList = new ArrayList<>();
         List<ReturnFlightResponse> returnFlightList = new ArrayList<>();
@@ -241,12 +201,12 @@ public class MapperService {
                     }
 
                     if (k == 0) {
-                        airInfoResponse.setDepartureDateTime(LocalDateTime.parse(flightSegment.getString("DepartureDateTime").substring(0, 10)));
+                        airInfoResponse.setDepartureDate(LocalDate.parse(flightSegment.getString("DepartureDateTime").substring(0, 10)));
                         airInfoResponse.setDepartureTime(flightSegment.getString("DepartureDateTime").substring(11, 16));
                     }
 
                     if (k == originDestinationOption.length() - 1) {
-                        airInfoResponse.setArrivalDateTime(LocalDateTime.parse(flightSegment.getString("ArrivalDateTime").substring(0, 10)));
+                        airInfoResponse.setArrivalDate(LocalDate.parse(flightSegment.getString("ArrivalDateTime").substring(0, 10)));
                         airInfoResponse.setArrivalTime(flightSegment.getString("ArrivalDateTime").substring(11, 16));
                     }
                 }
@@ -275,7 +235,13 @@ public class MapperService {
 
                 FlightType flightType = internationalFlight ? FlightType.International : FlightType.Domestic;
 
-                airInfoResponse.setFareInfo(extractFareInfoAndAddCommission(fareItinerary.getJSONObject("AirItineraryFareInfo"), flightType));
+                String ticketAdvisory = "";
+
+                if (fareItinerary.has("TicketAdvisory")) {
+                    ticketAdvisory = fareItinerary.getString("TicketAdvisory");
+                }
+
+                airInfoResponse.setFareInfo(extractFareInfoAndAddCommission(ticketAdvisory,fareItinerary.getJSONObject("AirItineraryFareInfo"), flightType, currency));
 
                 airInfoList.add(airInfoResponse);
 
@@ -307,56 +273,93 @@ public class MapperService {
         return flightSearchResponse;
     }
 
+
 // Helper methods to extract fare, baggage, and transit details should be defined to keep the logic clean and maintainable.
 
     private TransitDetails extractTransitDetails(JSONObject flightSegment, Duration layoverDuration) {
+        log.info("FLIGHT SEGMENT : {}", flightSegment);
         TransitDetails transitDetails = new TransitDetails();
-        Airport airport = airportRepository.findAirportByAirportCode(flightSegment.optString("DepartureAirportLocationCode")).orElseThrow(() -> new RuntimeException("Airport not found"));
 
-        transitDetails.setAirportCode(airport.getAirportCode());
-        transitDetails.setCity(airport.getCity());
-        transitDetails.setCountry(airport.getCountry());
-        transitDetails.setAirlineName(flightSegment.getString("MarketingAirlineName"));
-        transitDetails.setArrivalDateTime(flightSegment.getString("ArrivalDateTime"));
-        transitDetails.setDepartureDateTime(flightSegment.getString("DepartureDateTime"));
-        transitDetails.setAirlineLogo(airlineRepository.findByAirLineCode(flightSegment.getString("MarketingAirlineCode")).orElseThrow(() -> new RuntimeException("Airline not found")).getAirLineLogo());
+        String airportCode = flightSegment.optString("DepartureAirportLocationCode");
+
+        Optional<Airport> airportOptional = airportRepository.findAirportByAirportCode(airportCode);
+
+        if (airportOptional.isPresent()) {
+            Airport airport = airportOptional.get();
+            transitDetails.setAirportCode(airport.getAirportCode());
+            transitDetails.setCity(airport.getCity());
+            transitDetails.setCountry(airport.getCountry());
+        } else {
+            log.warn("Airport not found for code: {}", flightSegment.optString("DepartureAirportLocationCode"));
+            transitDetails.setAirportCode(airportCode);
+            transitDetails.setCity("");
+            transitDetails.setCountry("");
+        }
+
+        transitDetails.setAirlineName(flightSegment.optString("MarketingAirlineName", ""));
+        transitDetails.setArrivalDateTime(flightSegment.optString("ArrivalDateTime", ""));
+        transitDetails.setDepartureDateTime(flightSegment.optString("DepartureDateTime", ""));
+
+        transitDetails.setAirlineLogo(
+                airlineRepository.findByAirLineCode(flightSegment.optString("MarketingAirlineCode"))
+                        .map(Airline::getAirLineLogo)
+                        .orElse("")
+        );
 
         transitDetails.setLayoverDuration(layoverDuration);
+
         return transitDetails;
     }
 
-    private List<PriceInfoResponse> extractFareInfoAndAddCommission(JSONObject airItineraryFareInfo, FlightType flightType) {
+    private List<PriceInfoResponse> extractFareInfoAndAddCommission(String ticketAdvisory ,JSONObject airItineraryFareInfo, FlightType flightType, String currency) {
+
         JSONObject itinTotalFares = airItineraryFareInfo.getJSONObject("ItinTotalFares");
         JSONObject totalFare = itinTotalFares.getJSONObject("TotalFare");
         JSONObject baseFare = itinTotalFares.getJSONObject("BaseFare");
         JSONObject totalTax = itinTotalFares.getJSONObject("TotalTax");
-        JSONObject penaltyDetails = airItineraryFareInfo.getJSONArray("FareBreakdown").getJSONObject(0).getJSONObject("PenaltyDetails");
-
-        double commission = commissionService.calculateCommission(totalFare.getDouble("Amount"), flightType);
-
-        String fromCurrency = totalFare.optString("CurrencyCode");
-
-        double changePenaltyAmount = penaltyDetails.getDouble("ChangePenaltyAmount");
-
-        double refundPenaltyAmount = penaltyDetails.getDouble("RefundPenaltyAmount");
-
-        double baseFareAmount = baseFare.getDouble("Amount");
 
 
-        double rate = currencyService.convertCurrency(fromCurrency.trim(), "ETB");
+        JSONObject fareBreakdown = airItineraryFareInfo.getJSONArray("FareBreakdown").getJSONObject(0);
+        JSONObject penaltyDetails = fareBreakdown.has("PenaltyDetails") ? fareBreakdown.getJSONObject("PenaltyDetails") : null;
 
-        double totalAmount = airDetailsService.roundNumber(totalFare.getDouble("Amount") * rate + commission);
+        log.info("Total Fare: {}", totalFare);
+
+        double originalFareAmount = totalFare.getDouble("Amount");
+        String fromCurrency = totalFare.optString("CurrencyCode").trim();
+
+        double conversionRate = currencyService.convertCurrency(fromCurrency, currency);
+        double convertedFareAmount = originalFareAmount * conversionRate;
+
+        double commission = commissionService.calculateCommission(convertedFareAmount, flightType, "ADMIN");
+
+        double taxAmount = totalTax.getDouble("Amount") * conversionRate;
+        double baseFareAmount = baseFare.getDouble("Amount") * conversionRate;
+
+        double changePenaltyAmount = 0.0;
+        double refundPenaltyAmount = 0.0;
+        boolean refundAllowed = true;
+        boolean changeAllowed = true;
+
+        if (penaltyDetails != null) {
+            changePenaltyAmount = penaltyDetails.optDouble("ChangePenaltyAmount", 0.0) * conversionRate;
+            refundPenaltyAmount = penaltyDetails.optDouble("RefundPenaltyAmount", 0.0) * conversionRate;
+            refundAllowed = penaltyDetails.optBoolean("RefundAllowed", true);
+            changeAllowed = penaltyDetails.optBoolean("ChangeAllowed", true);
+        }
+
+        double totalAmount = airDetailsService.roundNumber(convertedFareAmount + commission);
 
         PriceInfoResponse priceInfo = PriceInfoResponse.builder()
-                .currency("ETB")
-                .taxAmount(airDetailsService.roundNumber(totalTax.getDouble("Amount") * rate))
-                .commissionAmount(commission)
-                .baseFareAmount(airDetailsService.roundNumber(baseFareAmount * rate))
+                .currency(currency)
+                .taxAmount(airDetailsService.roundNumber(taxAmount))
+                .commissionAmount(airDetailsService.roundNumber(commission))
+                .baseFareAmount(airDetailsService.roundNumber(baseFareAmount))
+                .ticketAdvisory(ticketAdvisory)
                 .totalAmount(totalAmount)
-                .changePenaltyAmount(airDetailsService.roundNumber(changePenaltyAmount * rate))
-                .refundPenaltyAmount(airDetailsService.roundNumber(refundPenaltyAmount * rate))
-                .refundAllowed(penaltyDetails.getBoolean("RefundAllowed"))
-                .changeAllowed(penaltyDetails.getBoolean("ChangeAllowed"))
+                .changePenaltyAmount(airDetailsService.roundNumber(changePenaltyAmount))
+                .refundPenaltyAmount(airDetailsService.roundNumber(refundPenaltyAmount))
+                .refundAllowed(refundAllowed)
+                .changeAllowed(changeAllowed)
                 .build();
 
         return List.of(priceInfo);
@@ -367,13 +370,10 @@ public class MapperService {
         JSONArray baggage = fairBreakDown.getJSONArray("Baggage");
         JSONArray cabinBaggage = fairBreakDown.getJSONArray("CabinBaggage");
 
-        BaggageInfoResponse baggageInfo = BaggageInfoResponse.builder()
-                .allowedBaggage(baggage.getString(0) + " " + cabinBaggage.getString(0))
-                .build();
+        BaggageInfoResponse baggageInfo = BaggageInfoResponse.builder().allowedBaggage(baggage.getString(0) + " " + cabinBaggage.getString(0)).build();
 
         return List.of(baggageInfo);
     }
-
 
     public static String calculateLayoverDuration(String arrivalDateTime, String departureDateTime, SimpleDateFormat dateFormat) {
         try {
@@ -404,7 +404,6 @@ public class MapperService {
 
         return Duration.ofHours(hours).plusMinutes(minutes);
     }
-
 
     public static Duration calculateTotalDuration(List<Duration> durationList, List<Duration> layoverDurationList) {
         Duration totalDuration = Duration.ZERO;

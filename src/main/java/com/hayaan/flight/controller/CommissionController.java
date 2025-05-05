@@ -3,10 +3,7 @@ package com.hayaan.flight.controller;
 
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.FlightType;
-import com.hayaan.flight.object.dto.CreateCommissionDto;
-import com.hayaan.flight.object.dto.CreateCommissionTypeDto;
-import com.hayaan.flight.object.dto.UpdateClientCommissionDto;
-import com.hayaan.flight.object.dto.UserCommissionResponse;
+import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.entity.Commission;
 import com.hayaan.flight.object.entity.CommissionType;
 import com.hayaan.flight.service.CommissionService;
@@ -39,12 +36,23 @@ public class CommissionController {
         return ResponseEntity.ok(commissions);
     }
 
+    @GetMapping("/commission/{commissionId}")
+    public ResponseEntity<CommissionResponse> getCommissionById(@PathVariable Long commissionId) {
+        CommissionResponse commissionById = commissionService.getCommissionById(commissionId);
+        return ResponseEntity.status(commissionById.getStatus()).body(commissionById);
+    }
+
     @GetMapping("/commissions/user/{userId}")
     public ResponseEntity<UserCommissionResponse> getCommissionByUser(@PathVariable Long userId) {
         UserCommissionResponse commissionByUser = commissionService.getCommissionByUser(userId);
         return ResponseEntity.status(commissionByUser.getStatus()).body(commissionByUser);
     }
 
+    @PutMapping("/commission/{commissionId}")
+    public ResponseEntity<CustomResponse> updateCommision(@PathVariable Long commissionId, @RequestBody UpdateCommissionDto updateCommissionDto) {
+        CustomResponse customResponse = commissionService.updateComission(commissionId , updateCommissionDto);
+        return ResponseEntity.status(customResponse.status()).body(customResponse);
+    }
     @PutMapping("/commissions/user")
     public ResponseEntity<CustomResponse> updateClientCommission(@RequestParam Long userId, @RequestParam FlightType flightType, @RequestParam Double amount) {
         CustomResponse customResponse = commissionService.updateClientCommission(userId, flightType, amount);
