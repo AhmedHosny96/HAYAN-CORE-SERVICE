@@ -1,31 +1,29 @@
 package com.hayaan.auth.service;
 
-import com.hayaan.auth.object.dto.ChangePasswordDto;
-import com.hayaan.auth.object.dto.CreateRoleDto;
-import com.hayaan.auth.object.dto.CreateUserDto;
-import com.hayaan.auth.object.dto.UserDetailsResp;
+import com.hayaan.auth.object.dto.*;
 import com.hayaan.auth.object.entity.Role;
 import com.hayaan.auth.object.entity.User;
 import com.hayaan.auth.repo.RoleRepo;
 import com.hayaan.auth.repo.UserRepository;
+import com.hayaan.config.UtilService;
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.repo.AgentRepo;
-import com.hayaan.config.UtilService;
+import com.hayaan.flight.repo.CommissionRepo;
 import com.hayaan.notification.NotificationService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.context.IContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -42,18 +40,69 @@ public class UserService {
 
     private final AgentRepo agentRepo;
 
+    private final CommissionRepo commissionRepo;
+
     private final NotificationService notificationService;
 
     // TODO: 2/14/2024 USER AND USER ROLE ALL RELATED FEATURES
 
     // ROLES
 
-    public List<Role> getAllRoles() {
-        return roleRepo.findAll();
+    public RolesResponse getAllRoles() {
+
+        String loggedInUser = getLoggedInUserRole();
+
+        log.info("logged in user : {}", loggedInUser);
+
+
+        return RolesResponse.builder()
+                .status(200)
+                .message("success")
+                .roles(roleRepo.findAll())
+                .build();
     }
+
+    // TODO: 11/26/2024 all users
+
+
+    public AllUserResp getAllUsers() {
+
+        List<User> all = userRepository.findAll();
+
+        return AllUserResp.builder()
+                .status(200)
+                .message("success")
+                .users(all)
+                .build();
+    }
+
 
     public Role getRoleById(int id) {
         return roleRepo.findById(id).orElse(null);
+    }
+
+
+    public String getLoggedInUserCurrency() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+            return null; // Or throw an exception or return a default currency
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            return null; // Or handle the case where the user is not found
+        }
+
+        User user = userOptional.get();
+
+        return commissionRepo.findByUser(user)
+                .filter(commissionList -> !commissionList.isEmpty())
+                .map(commissionList -> commissionList.get(0).getCurrency())
+                .orElse(null); // Or handle the case where no commissions are found
     }
 
     public CustomResponse createRole(CreateRoleDto roleDto) {
@@ -71,6 +120,30 @@ public class UserService {
         roleRepo.save(role);
 
         return new CustomResponse(200, "Role created successfully", null);
+    }
+
+    public String getLoggedInUserRole() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userType = null;
+
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String username = userDetails.getUsername();
+
+            Optional<User> byUsername = userRepository.findByUsername(username);
+
+
+            User user = byUsername.get();
+
+            userType = user.getRole().getName();
+
+            return userType;
+        } else {
+
+            return userType;
+        }
+
     }
 
     // TODO USER BY ID FOR PROFILE
@@ -117,8 +190,7 @@ public class UserService {
             return new CustomResponse(400, "Wrong old password", null);
         }
 
-
-        existingUser.setPassword(changePasswordDto.newPassword());
+        existingUser.setPassword(passwordEncoder.encode(changePasswordDto.newPassword()));
         existingUser.setStatus(1); // active
         existingUser.setPasswordChanged(true);
 
@@ -156,7 +228,7 @@ public class UserService {
 
         String generatedPassword = utilService.generatePassword();
 
-        log.info("USER : {} GENERATED PASSWORD", userDto.email() );
+        log.info("USER : {} GENERATED PASSWORD", userDto.email());
         String hashedPassword = passwordEncoder.encode(generatedPassword);
 
         var role = roleRepo.findById(userDto.roleId());
@@ -191,7 +263,7 @@ public class UserService {
         context.setVariable("otp", generatedPassword);
         context.setVariable("currentYear", LocalDate.now().getYear());
 
-        notificationService.sendMail(userDto.email(), "Onetime password", "user-credentials", context);
+        notificationService.sendMail(userDto.email(), "Onetime password", "user-credentials", context, Optional.empty());
         // send sms
         String smsBody = "Dear " + userDto.username() + ", your one-time password is: " + generatedPassword + " Remember to change it after login.";
 

@@ -29,9 +29,9 @@ public class AirInfoResponse {
     private String flightNumber;
     private String equipment;
     private Duration flightDuration;
-    private LocalDateTime departureDateTime;
+    private LocalDate departureDate;
     private String departureTime;
-    private LocalDateTime arrivalDateTime;
+    private LocalDate arrivalDate;
     private String arrivalTime;
     private String origin;
     private String destination;

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -45,6 +46,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
 
+
     @GetMapping("/test")
     public void testEmail(@RequestParam String email) throws ExecutionException, InterruptedException {
 
@@ -52,10 +54,10 @@ public class AuthController {
         context.setVariable("username", "Ahmed");
         context.setVariable("otp", "generatedPassword");
         context.setVariable("currentYear", LocalDate.now().getYear());
-        CompletableFuture<Void> completableFuture = notificationService.sendMail(email, "Onetime password", "user-credentials", context);
+
+        CompletableFuture<Void> completableFuture = notificationService.sendMail(email, "Onetime password", "user-credentials", context, Optional.empty());
 
         log.info("completableFuture : {}", completableFuture);
-
     }
 
     //
@@ -95,7 +97,9 @@ public class AuthController {
                 "success",
                 authRequest.username(),
                 token,
-                currentUser.isPasswordChanged()
+                currentUser.isPasswordChanged(),
+                role.getName(),
+                currentUser.getId()
         );
         return new ResponseEntity<>(customResponse, HttpStatus.OK);
     }

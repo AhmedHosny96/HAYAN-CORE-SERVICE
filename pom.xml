@@ -63,6 +63,27 @@
 
         </dependency>
 
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>7.1.14</version>
+            <type>pom</type>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.4.1</version>
+        </dependency>
+
+
+
         <!--        <dependency>-->
         <!--            <groupId>io.springfox</groupId>-->
         <!--            <artifactId>springfox-boot-starter</artifactId>-->
@@ -177,14 +198,9 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <addResources>true</addResources>
-                </configuration>
-            </plugin>
+
         </plugins>
+        <finalName>HAYAAN-CORE-SERVICE-V1</finalName>
     </build>
 
 </project>

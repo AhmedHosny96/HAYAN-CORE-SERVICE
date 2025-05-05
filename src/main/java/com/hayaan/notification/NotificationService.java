@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.RequestBuilder;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,11 +21,13 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -51,19 +54,43 @@ public class NotificationService {
 
 
     @Async
-    public CompletableFuture<Void> sendMail(String toEmail, String subject, String templateName, IContext context) {
+    public CompletableFuture<Void> sendMail(String toEmail, String subject, String templateName, IContext context, Optional<Object> attachment) {
         return CompletableFuture.runAsync(() -> {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             try {
-                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
+                // Create the message helper, specifying multipart if there's an attachment
+                boolean isAttachmentPresent = attachment.isPresent();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, isAttachmentPresent, "UTF-8");
+
+                // Set the standard email properties
                 helper.setTo(toEmail);
                 helper.setSubject(subject);
+
+                // Process the email content from the template
                 String htmlContent = templateEngine.process(templateName, context);
                 helper.setText(htmlContent, true);
+
+                // If an attachment is provided, handle it
+                if (isAttachmentPresent) {
+                    Object attachedFile = attachment.get();
+
+                    // Handle File attachment
+                    if (attachedFile instanceof File) {
+                        File file = (File) attachedFile;
+                        helper.addAttachment(file.getName(), file);
+                    }
+
+                    // Handle ByteArrayResource attachment
+                    else if (attachedFile instanceof ByteArrayResource) {
+                        ByteArrayResource byteArrayResource = (ByteArrayResource) attachedFile;
+                        helper.addAttachment(byteArrayResource.getFilename(), byteArrayResource);
+                    }
+                }
+
+                // Send the email
                 mailSender.send(mimeMessage);
             } catch (MessagingException e) {
-                e.printStackTrace();
-                log.info("PROBLEM OCCURRED WHILE SENDING EMAIL: {}", e.getMessage());
+                log.error("PROBLEM OCCURRED WHILE SENDING EMAIL: {}", e.getMessage());
                 throw new RuntimeException(e);
             }
         });

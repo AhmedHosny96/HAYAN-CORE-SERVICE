@@ -5,7 +5,9 @@ public record AuthResponse(
         String message,
         String username,
         String token,
-        Boolean isPasswordChanged
+        Boolean isPasswordChanged,
+        String role,
+        Long userId
 
 ) {
 }

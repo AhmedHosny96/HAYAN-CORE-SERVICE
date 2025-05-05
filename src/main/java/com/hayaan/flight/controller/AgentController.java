@@ -29,7 +29,7 @@ public class AgentController {
 
     // AGENT TYPE ENDPOINTS
 
-    @PostMapping("/agent-types")
+    @PostMapping("/agent-type")
     public ResponseEntity<?> createAgentType(@RequestBody CreateAgentTypeDto agentTypeDto) {
         CustomResponse response = agentService.createAgentType(agentTypeDto);
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.status()));

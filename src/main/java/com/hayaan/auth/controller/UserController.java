@@ -1,10 +1,7 @@
 package com.hayaan.auth.controller;
 
 
-import com.hayaan.auth.object.dto.ChangePasswordDto;
-import com.hayaan.auth.object.dto.CreateRoleDto;
-import com.hayaan.auth.object.dto.CreateUserDto;
-import com.hayaan.auth.object.dto.UserDetailsResp;
+import com.hayaan.auth.object.dto.*;
 import com.hayaan.auth.object.entity.Role;
 import com.hayaan.auth.service.UserService;
 import com.hayaan.dto.CustomResponse;
@@ -28,11 +25,18 @@ public class UserController {
 
     // TODO: 2/14/2024 USER ROUTES
 
-    @PostMapping("/users")
+    @PostMapping("/user")
     public ResponseEntity<CustomResponse> createUser(@RequestBody CreateUserDto userDto) throws MessagingException {
         CustomResponse response = userService.createUser(userDto);
         return ResponseEntity.status(response.status()).body(response);
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<AllUserResp> getAllusers() {
+        AllUserResp allUsers = userService.getAllUsers();
+        return ResponseEntity.status(allUsers.getStatus()).body(allUsers);
+    }
+
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> changePassword(@PathVariable Long userId) {
@@ -48,9 +52,9 @@ public class UserController {
     }
 
     @GetMapping("/roles")
-    public ResponseEntity<List<Role>> getAllRoles() {
-        List<Role> roles = userService.getAllRoles();
-        return new ResponseEntity<>(roles, HttpStatus.OK);
+    public ResponseEntity<?> getAllRoles() {
+        RolesResponse allRoles = userService.getAllRoles();
+        return new ResponseEntity<>(allRoles, HttpStatus.OK);
     }
 
     @GetMapping("roles/{id}")

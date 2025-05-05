@@ -215,9 +215,9 @@ public class TravelPortService {
                 airSegmentObj.put("carrier", airSegment.getAirlineName());
                 airSegmentObj.put("flightNumber", airSegment.getFlightNumber());
                 airSegmentObj.put("equipment", airSegment.getEquipment());
-                airSegmentObj.put("departureDate", airSegment.getDepartureDateTime());
+                airSegmentObj.put("departureDate", airSegment.getDepartureDate());
                 airSegmentObj.put("departureTime", airSegment.getDepartureTime());
-                airSegmentObj.put("arrivalDate", airSegment.getArrivalDateTime());
+                airSegmentObj.put("arrivalDate", airSegment.getArrivalDate());
                 airSegmentObj.put("arrivalTime", airSegment.getArrivalTime());
                 airSegmentObj.put("origin", airSegment.getOrigin());
                 airSegmentObj.put("destination", airSegment.getDestination());
@@ -396,7 +396,7 @@ public class TravelPortService {
             for (TravelersDto.PhoneNumber phoneNumber : traveler.getPhoneNumbers()) {
                 JSONObject phoneNumberObject = new JSONObject();
                 phoneNumberObject.put("phoneNumber", phoneNumber.getPhoneNumber());
-                phoneNumberObject.put("areCode", phoneNumber.getAreCode());
+                phoneNumberObject.put("areCode", phoneNumber.getAreaCode());
                 phoneNumberObject.put("cityCode", phoneNumber.getCityCode());
                 phoneNumberObject.put("countryArea", phoneNumber.getCountryArea());
                 phoneNumberArray.put(phoneNumberObject);
@@ -605,7 +605,7 @@ public class TravelPortService {
                 .travelers(travelerResponseList)
                 .bookingInfo(List.of(bookingInfoResponse))
                 .priceInfo(priceInfoResponse)
-                .airInfo(List.of(airInfoResponse))
+                //.airInfo(List.of(airInfoResponse))
                 .passengerInfo(passengerTypeList)
                 .build();
     }

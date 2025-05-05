@@ -2,10 +2,13 @@ package com.hayaan.flight.service;
 
 
 import com.hayaan.config.AsyncHttpConfig;
+import com.hayaan.flight.object.dto.PaymentMethodResp;
 import com.hayaan.flight.object.dto.PaymentStageDto;
 import com.hayaan.flight.object.dto.booking.BookingPaymentDto;
 import com.hayaan.flight.object.entity.Payment;
+import com.hayaan.flight.object.entity.PaymentMethod;
 import com.hayaan.flight.object.entity.TicketHistory;
+import com.hayaan.flight.repo.PaymentMethodRepo;
 import com.hayaan.flight.repo.PaymentRepository;
 import com.hayaan.flight.repo.TicketHistoryRepo;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +36,8 @@ public class FlightPaymentService {
 
     private final PaymentRepository paymentRepository;
 
+    private final PaymentMethodRepo paymentMethodRepo;
+
 
     // THIS WILL CALL PAYMENT GATEWAY
 
@@ -41,10 +47,15 @@ public class FlightPaymentService {
 
 
     public JSONObject makePayment(BookingPaymentDto bookingPaymentDto) {
+
+        log.info("PAYMENT REQUEST : {}", bookingPaymentDto);
         // get the flight details by pnr
         var customResponse = new JSONObject();
 
         Optional<TicketHistory> flightByPnr = ticketHistoryRepo.findByPnr(bookingPaymentDto.getPnr());
+
+
+        log.info("FLIGHT BY PNR : {}", bookingPaymentDto);
 
         if (!flightByPnr.isPresent()) {
             customResponse.put("status", "400");
@@ -88,6 +99,8 @@ public class FlightPaymentService {
         var paymentRequest = new JSONObject();
         paymentRequest.put("pnr", bookingPaymentDto.getPnr());
         paymentRequest.put("paymentMode", bookingPaymentDto.getPaymentMethod());
+        paymentRequest.put("phoneNumber", bookingPaymentDto.getPayerAccount());
+
 
         RequestBuilder requestBody = new RequestBuilder("POST")
                 .setUrl(PAYMENT_ENDPOINT)
@@ -114,6 +127,21 @@ public class FlightPaymentService {
 
         return paymentResponse;
 
+    }
+
+
+    // get payment options
+
+    public PaymentMethodResp getAllActivePaymentMethods() {
+
+        List<PaymentMethod> paymentMethodList = paymentMethodRepo.findByStatus(1);
+
+
+        return PaymentMethodResp.builder()
+                .status(200)
+                .message("success")
+                .paymentMethods(paymentMethodList)
+                .build();
     }
 
 

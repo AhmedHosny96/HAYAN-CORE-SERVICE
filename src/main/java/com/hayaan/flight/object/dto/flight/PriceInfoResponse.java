@@ -16,7 +16,7 @@ public class PriceInfoResponse {
     //    private double taxes;
     private double commissionAmount;
     private double priceAfterTaxAndCommission;
-
+    private String ticketAdvisory;
     private double taxAmount;
     private double baseFareAmount;
     private double totalAmount;

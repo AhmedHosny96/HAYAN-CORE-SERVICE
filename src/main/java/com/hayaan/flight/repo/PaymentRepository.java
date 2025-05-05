@@ -30,4 +30,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<List<Payment>> findPaymentByPaymentStatusAndWithOutPaymentNotification(int status, boolean isWithOutPayment);
 
 
+   List<Optional<Payment>> findByPaymentStatus(Integer status);
+
+    boolean existsByPnr(String pnr);
 }
