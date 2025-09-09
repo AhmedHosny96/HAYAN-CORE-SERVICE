@@ -1,13 +1,14 @@
 package com.hayaan.auth.object.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hayaan.flight.object.entity.Agent;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Data
@@ -34,6 +35,7 @@ public class User {
     @Column(name = "FullName")
     private String fullName;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "AgentId") // Specify the column name here
     private Agent agent;
@@ -58,4 +60,38 @@ public class User {
     @Column(name = "IsPasswordChanged")
     private boolean isPasswordChanged;
 
+
+    // --- OAuth / Social login friendly fields ---
+    @Column(name = "Provider", length = 50) // e.g., "google"
+    private String provider;
+
+    @Column(name = "ProviderId", length = 255) // Google's "sub"
+    private String providerId;
+
+    @Column(name = "PictureUrl", length = 1000)
+    private String pictureUrl;
+
+    @Column(name = "EmailVerified")
+    private Boolean emailVerified;
+
+    @Column(name = "LastLoginAt")
+    private LocalDateTime lastLoginAt;
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", agent=" + agent +
+                ", password='" + password + '\'' +
+                ", role=" + role +
+                ", status=" + status +
+                ", createdBy='" + createdBy + '\'' +
+                ", createdDate=" + createdDate +
+                ", isPasswordChanged=" + isPasswordChanged +
+                '}';
+    }
 }

@@ -1,7 +1,7 @@
 package com.hayaan.flight.object.entity;
 
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
 
 @Data
@@ -9,7 +9,7 @@ import lombok.Data;
 @Table(name = "Airport")
 public class Airport {
 
-    @jakarta.persistence.Id
+    @javax.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer Id;
 

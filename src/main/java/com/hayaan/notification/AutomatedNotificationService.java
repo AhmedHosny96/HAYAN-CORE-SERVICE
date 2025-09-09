@@ -9,9 +9,11 @@ import com.hayaan.flight.object.entity.Passenger;
 import com.hayaan.flight.object.entity.Payment;
 import com.hayaan.flight.object.entity.TicketHistory;
 import com.hayaan.flight.repo.PassengerRepo;
+import com.hayaan.flight.repo.PassengerTicketRepo;
 import com.hayaan.flight.repo.PaymentRepository;
 import com.hayaan.flight.repo.TicketHistoryRepo;
 import com.hayaan.flight.service.FlightLogicService;
+import com.hayaan.flight.service.PassengerTicket;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asynchttpclient.RequestBuilder;
@@ -52,6 +54,7 @@ public class AutomatedNotificationService {
     private final FlightLogicService flightLogicService;
 
     private final UtilService utilService;
+    private final PassengerTicketRepo passengerTicketRepo;
 
     // a runner that checks if ticket is confirmed
 //    public void checkConfirmedTicketsAndPopulate(){
@@ -99,73 +102,77 @@ public class AutomatedNotificationService {
             ticket.setStatus(1); // Completed
             ticketHistoryRepo.save(ticket);
 
-            Optional<List<Passenger>> passengersOpt = passengerRepo.findByTicketHistoryId(ticket.getId());
-            if (!passengersOpt.isPresent() || passengersOpt.get().isEmpty()) continue;
+            List<PassengerTicket> passengersOpt = passengerTicketRepo.findByTicketHistory(ticket);
 
-            Passenger passenger = passengersOpt.get().get(0);
-            String email = passenger.getEmail();
-            String customerName = passenger.getFirstName() + " " + passenger.getMiddleName() + " " + passenger.getLastName();
+            if (!passengersOpt.isEmpty()) {
 
-            String formattedDeparture = ticket.getDepartureDateTime().format(DATE_TIME_FORMATTER);
-            String formattedArrival = ticket.getArrivalDateTime().format(DATE_TIME_FORMATTER);
+                Passenger passenger = passengersOpt.get(0).getPassenger();
 
-            Airport originByCode = flightLogicService.getAirportByCode(ticket.getOrigin());
-            Airport destinationByCode = flightLogicService.getAirportByCode(ticket.getDestination());
+                String email = passenger.getEmail();
+                String customerName = passenger.getFirstName() + " " + passenger.getMiddleName() + " " + passenger.getLastName();
 
-            BoardingDto boardingDto = new BoardingDto();
-            boardingDto.setName(customerName.toUpperCase());
-            boardingDto.setFlight(ticket.getFlightNumber());
-            boardingDto.setSeat("-");
-            boardingDto.setFrom(ticket.getOrigin() + " - " + originByCode.getCity() + ", " + originByCode.getCountry());
-            boardingDto.setTo(ticket.getDestination() + " - " + destinationByCode.getCity() + ", " + destinationByCode.getCountry());
-            boardingDto.setDepartureTime(formattedDeparture);
-            boardingDto.setArrivalTime(formattedArrival);
-            boardingDto.setPnr(ticket.getPnr());
-            boardingDto.setETicketNumber(eTicketNumber);
-            boardingDto.setTicketStatus("ISSUED");
+                String formattedDeparture = ticket.getDepartureDateTime().format(DATE_TIME_FORMATTER);
+                String formattedArrival = ticket.getArrivalDateTime().format(DATE_TIME_FORMATTER);
 
-            ByteArrayOutputStream pdfStream;
-            try {
-                pdfStream = utilService.generatePdfWithCustomBarcode(boardingDto);
-            } catch (Exception e) {
-                log.error("Failed to generate boarding pass for PNR: {}", ticket.getPnr(), e);
-                continue;
-            }
+                Airport originByCode = flightLogicService.getAirportByCode(ticket.getOrigin());
+                Airport destinationByCode = flightLogicService.getAirportByCode(ticket.getDestination());
 
-            ByteArrayResource attachment = new ByteArrayResource(pdfStream.toByteArray()) {
-                @Override
-                public String getFilename() {
-                    return "boarding-pass-" + ticket.getPnr() + ".pdf";
+                BoardingDto boardingDto = new BoardingDto();
+                boardingDto.setName(customerName.toUpperCase());
+                boardingDto.setFlight(ticket.getFlightNumber());
+                boardingDto.setSeat("-");
+                boardingDto.setFrom(ticket.getOrigin() + " - " + originByCode.getCity() + ", " + originByCode.getCountry());
+                boardingDto.setTo(ticket.getDestination() + " - " + destinationByCode.getCity() + ", " + destinationByCode.getCountry());
+                boardingDto.setDepartureTime(formattedDeparture);
+                boardingDto.setArrivalTime(formattedArrival);
+                boardingDto.setPnr(ticket.getPnr());
+                boardingDto.setETicketNumber(eTicketNumber);
+                boardingDto.setTicketStatus("ISSUED");
+
+                ByteArrayOutputStream pdfStream;
+                try {
+                    pdfStream = utilService.generatePdfWithCustomBarcode(boardingDto);
+                } catch (Exception e) {
+                    log.error("Failed to generate boarding pass for PNR: {}", ticket.getPnr(), e);
+                    continue;
                 }
-            };
 
-            // Prepare and send email
-            Context context = new Context();
-            context.setVariable("pnr", ticket.getPnr());
-            context.setVariable("customerName", customerName);
-            context.setVariable("customerEmail", email);
-            context.setVariable("noOfPassengers", ticket.getTotalNoOfPassengers());
-            context.setVariable("origin", ticket.getOrigin());
-            context.setVariable("departureDateAndTime", formattedDeparture);
-            context.setVariable("destination", ticket.getDestination());
-            context.setVariable("arrivalDateAndTime", formattedArrival);
-            context.setVariable("flightNumber", ticket.getFlightNumber());
-            context.setVariable("class", "ECONOMY");
-            context.setVariable("ticketAmount", ticket.getTotalAmount());
+                ByteArrayResource attachment = new ByteArrayResource(pdfStream.toByteArray()) {
+                    @Override
+                    public String getFilename() {
+                        return "boarding-pass-" + ticket.getPnr() + ".pdf";
+                    }
+                };
 
-            notificationService.sendMail(email, "Boarding Pass Ready", "boarding-pass", context, Optional.of(attachment))
-                    .thenRun(() -> log.info("Boarding pass sent for PNR: {}", ticket.getPnr()))
-                    .exceptionally(ex -> {
-                        log.error("Failed to send boarding pass email for PNR: {}", ticket.getPnr(), ex);
-                        return null;
-                    });
+                // Prepare and send email
+                Context context = new Context();
+                context.setVariable("pnr", ticket.getPnr());
+                context.setVariable("customerName", customerName);
+                context.setVariable("customerEmail", email);
+                context.setVariable("noOfPassengers", ticket.getTotalNoOfPassengers());
+                context.setVariable("origin", ticket.getOrigin());
+                context.setVariable("departureDateAndTime", formattedDeparture);
+                context.setVariable("destination", ticket.getDestination());
+                context.setVariable("arrivalDateAndTime", formattedArrival);
+                context.setVariable("flightNumber", ticket.getFlightNumber());
+                context.setVariable("class", "ECONOMY");
+                context.setVariable("ticketAmount", ticket.getTotalAmount());
 
-            // Send SMS
-            String smsMessage = String.format(
-                    "Dear %s. Your booking is confirmed for Hayaan Travel. Ref: %s. Check your email for details.",
-                    passenger.getFirstName(), ticket.getPnr()
-            );
-            notificationService.sendSms(passenger.getPhoneNumber(), smsMessage);
+                notificationService.sendMail(email, "Boarding Pass Ready", "boarding-pass", context, Optional.of(attachment))
+                        .thenRun(() -> log.info("Boarding pass sent for PNR: {}", ticket.getPnr()))
+                        .exceptionally(ex -> {
+                            log.error("Failed to send boarding pass email for PNR: {}", ticket.getPnr(), ex);
+                            return null;
+                        });
+
+                // Send SMS
+                String smsMessage = String.format(
+                        "Dear %s. Your booking is confirmed for Hayaan Travel. Ref: %s. Check your email for details.",
+                        passenger.getFirstName(), ticket.getPnr()
+                );
+                notificationService.sendSms(passenger.getPhoneNumber(), smsMessage);
+
+            }
         }
     }
 
@@ -189,14 +196,13 @@ public class AutomatedNotificationService {
             }
 
             TicketHistory ticketHistory = ticketByPnr.get();
-            Optional<List<Passenger>> passengerList = passengerRepo.findByTicketHistoryId(ticketHistory.getId());
 
-            if (!passengerList.isPresent() || passengerList.get().isEmpty()) {
-                log.warn("No passengers found for ticket history ID: {}", ticketHistory.getId());
+            List<PassengerTicket> passengerTickets = passengerTicketRepo.findByTicketHistory(ticketHistory);
+            if (passengerTickets.isEmpty()) {
+                log.warn("No passengers mapped to ticket history ID: {}", ticketHistory.getId());
                 continue;
             }
-
-            Passenger passenger = passengerList.get().get(0);
+            Passenger passenger = passengerTickets.get(0).getPassenger();
             String email = passenger.getEmail();
             String customerName = passenger.getFirstName() + " " + passenger.getMiddleName() + " " + passenger.getLastName();
             String formattedDepartureDate = ticketHistory.getDepartureDateTime().format(DATE_TIME_FORMATTER);
@@ -219,7 +225,7 @@ public class AutomatedNotificationService {
             notificationService.sendMail(email, "Payment received!", "success-payment", context, Optional.empty())
                     .thenRun(() -> {
                         payment.setSuccessPaymentNotification(true);
-                        payment.setPaymentStatus(2);
+                        payment.setPaymentStatus(3);
                         payment.setPaymentStatusDesc("INPROCESS");
                         paymentRepository.save(payment);
                         log.info("Email sent and payment marked in-process for PNR: {}", payment.getPnr());
@@ -231,7 +237,7 @@ public class AutomatedNotificationService {
 
             // Send SMS
             String smsMessage = String.format(
-                    "Dear %s. Payment received! Your Hayaan Travel booking is confirmed. Booking Ref: %s. Check your email for details.",
+                    "Dear %s. Payment received! You will receive details via email once your ticket is confirmed!",
                     passenger.getFirstName(), ticketHistory.getPnr()
             );
             notificationService.sendSms(passenger.getPhoneNumber(), smsMessage);
@@ -409,12 +415,12 @@ public class AutomatedNotificationService {
                         String formattedDepartureDate = departureDateTime.format(DATE_TIME_FORMATTER);
 
                         // query passenger
-                        Optional<List<Passenger>> passengerList = passengerRepo.findByTicketHistoryId(ticketHistory.getId());
+                        List<PassengerTicket> passengerTickets = passengerTicketRepo.findByTicketHistory(ticketHistory);
 
-                        if (passengerList.isPresent() && !passengerList.get().isEmpty()) {
-                            List<Passenger> passengers = passengerList.get();
 
-                            Passenger passenger = passengers.get(0);
+                        if (!passengerTickets.isEmpty()) {
+
+                            Passenger passenger = passengerTickets.get(0).getPassenger();
                             String email = passenger.getEmail();
                             String customerName = passenger.getFirstName() + " " + passenger.getLastName();
 
@@ -494,14 +500,14 @@ public class AutomatedNotificationService {
             }
 
             TicketHistory ticket = ticketOpt.get();
-            Optional<List<Passenger>> passengersOpt = passengerRepo.findByTicketHistoryId(ticket.getId());
+            List<PassengerTicket> passengerTickets = passengerTicketRepo.findByTicketHistory(ticket);
 
-            if (!passengersOpt.isPresent() || passengersOpt.get().isEmpty()) {
+            if (!passengerTickets.isEmpty()) {
                 log.warn("No passengers found for ticket history ID: {}", ticket.getId());
                 continue;
             }
 
-            Passenger passenger = passengersOpt.get().get(0);
+            Passenger passenger = passengerTickets.get(0).getPassenger();
             String email = passenger.getEmail();
             String phone = passenger.getPhoneNumber();
             String customerName = passenger.getFirstName() + " " + passenger.getLastName();
@@ -528,7 +534,7 @@ public class AutomatedNotificationService {
                         // Send SMS only after email success
                         try {
                             String smsTemplate = "Reminder: Complete your Hayaan Travel booking by paying %s. Booking Ref: %s. Check your email for details.";
-                            String smsMessage = String.format(smsTemplate, ticket.getCurrency() + ticket.getTotalAmount(), ticket.getPnr());
+                            String smsMessage = String.format(smsTemplate, ticket.getTotalAmount(), ticket.getPnr());
                             notificationService.sendSms(phone, smsMessage);
 
                             // Mark as notified after both email and SMS
@@ -574,14 +580,14 @@ public class AutomatedNotificationService {
             }
 
             TicketHistory ticketHistory = optionalTicket.get();
-            Optional<List<Passenger>> passengerListOpt = passengerRepo.findByTicketHistoryId(ticketHistory.getId());
+            List<PassengerTicket> passengerTickets = passengerTicketRepo.findByTicketHistory(ticketHistory);
 
-            if (!passengerListOpt.isPresent() || passengerListOpt.get().isEmpty()) {
+            if (!passengerTickets.isEmpty()) {
                 log.warn("No passengers found for ticket history ID: {}", ticketHistory.getId());
                 continue;
             }
 
-            Passenger passenger = passengerListOpt.get().get(0);
+            Passenger passenger = passengerTickets.get(0).getPassenger();
             String customerName = passenger.getFirstName() + " " + passenger.getLastName();
             String email = passenger.getEmail();
             String phone = passenger.getPhoneNumber();
@@ -645,7 +651,7 @@ public class AutomatedNotificationService {
 
             // Send SMS
             String smsTemplate = "Dear %s. To confirm your Hayaan travel booking Booking Ref: %s. Please pay the amount : %s.";
-            String smsContent = String.format(smsTemplate, passenger.getFirstName(), ticketHistory.getPnr(), ticketHistory.getCurrency() + ticketHistory.getTotalAmount());
+            String smsContent = String.format(smsTemplate, passenger.getFirstName(), ticketHistory.getPnr(), ticketHistory.getTotalAmount());
             notificationService.sendSms(phone, smsContent);
         }
     }

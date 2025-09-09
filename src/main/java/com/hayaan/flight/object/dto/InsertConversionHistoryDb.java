@@ -1,6 +1,6 @@
 package com.hayaan.flight.object.dto;
 
-import jakarta.persistence.Column;
+import javax.persistence.Column;
 import lombok.Builder;
 import lombok.Data;
 

@@ -3,7 +3,7 @@ package com.hayaan.flight.service;
 
 import com.hayaan.auth.object.entity.User;
 import com.hayaan.auth.repo.UserRepository;
-import com.hayaan.flight.object.dto.BookingByUsers;
+import com.hayaan.flight.object.dto.BookingReportResp;
 import com.hayaan.flight.object.entity.Agent;
 import com.hayaan.flight.object.entity.TicketHistory;
 import com.hayaan.flight.repo.AgentRepo;
@@ -12,7 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,7 +28,7 @@ public class ReportService {
 
     // get All Bookings by agentId
 
-    public BookingByUsers getBookingsByAgent(Long agentId) {
+    public BookingReportResp getBookingsByAgent(Long agentId) {
 
 
         Agent agent = agentRepo.findById(agentId).orElse(null);
@@ -62,7 +66,7 @@ public class ReportService {
             }
         }
 
-        return BookingByUsers.builder()
+        return BookingReportResp.builder()
                 .status(200)
                 .message("Success")
                 .bookingHistory(bookings) // We are returning only the summary, not a specific booking here
@@ -74,7 +78,7 @@ public class ReportService {
                 .build();
     }
 
-    public BookingByUsers getBookingsByUser(Long userId) {
+    public BookingReportResp getBookingsByUser(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
 
         List<TicketHistory> bookings = ticketHistoryRepo.findByUser(user);
@@ -109,7 +113,7 @@ public class ReportService {
             }
         }
 
-        return BookingByUsers.builder()
+        return BookingReportResp.builder()
                 .status(200)
                 .message("Success")
                 .bookingHistory(bookings) // We are returning only the summary, not a specific booking here
@@ -121,11 +125,23 @@ public class ReportService {
                 .build();
     }
 
-    public BookingByUsers getBookingsByPassenger(Long passengerId) {
-        List<TicketHistory> bookings = ticketHistoryRepo.findByPassengerId(passengerId);
+    public BookingReportResp getBookingsByPassenger(Long passengerId) {
+
+        Optional<User> userRepositoryById = userRepository.findById(passengerId);
+
+        if (!userRepositoryById.isPresent()) {
+            return BookingReportResp.builder()
+                    .status(400)
+                    .message("Invalid user ID")
+                    .build();
+        }
+
+        User user = userRepositoryById.get();
+
+        List<TicketHistory> bookings = ticketHistoryRepo.findByUser(user);
 
         if (bookings.isEmpty()) {
-            return BookingByUsers.builder()
+            return BookingReportResp.builder()
                     .status(404)
                     .message("No bookings found for passenger ID: " + passengerId)
                     .build();
@@ -148,7 +164,7 @@ public class ReportService {
             }
         }
 
-        return BookingByUsers.builder()
+        return BookingReportResp.builder()
                 .status(200)
                 .message("Success")
                 .bookingHistory(bookings)
@@ -159,6 +175,45 @@ public class ReportService {
                 .totalFailedTickets(totalFailedTickets)
                 .build();
     }
+
+
+    public BookingReportResp getAllBookingsByDate(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startOfDay = startDate.atStartOfDay();
+        LocalDateTime endOfDay = endDate.atTime(LocalTime.MAX);
+
+        List<TicketHistory> bookings = ticketHistoryRepo.findAllByCreatedDateBetween(startOfDay, endOfDay);
+
+        int total = bookings.size();
+        int totalPending = 0;
+        int totalSuccess = 0;
+        int totalOnProcess = 0;
+        int totalCancelled = 0;
+        int totalReissued = 0;
+
+        for (TicketHistory booking : bookings) {
+            if (booking.getStatus() == null) continue;
+            switch (booking.getStatus()) {
+                case 0 -> totalPending++;
+                case 1 -> totalSuccess++;
+                case 2 -> totalOnProcess++;
+                case 3 -> totalCancelled++;
+                case 5 -> totalReissued++;
+            }
+        }
+
+        return BookingReportResp.builder()
+                .status(200)
+                .message("success")
+                .bookingHistory(bookings)
+                .totalTickets(total)
+                .totalPendingTickets(totalPending)
+                .totalConfirmedTickets(totalSuccess)
+                .totalCancelledTickets(totalCancelled)
+                .totalFailedTickets(totalReissued)
+                .totalOnProcessTickets(totalOnProcess)
+                .build();
+    }
+
 
 
 

@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.context.Context;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -102,6 +103,13 @@ public class AuthController {
                 currentUser.getId()
         );
         return new ResponseEntity<>(customResponse, HttpStatus.OK);
+    }
+
+    @GetMapping("/google")
+    public ResponseEntity<Void> googleLogin() {
+        return ResponseEntity.status(302)
+                .location(URI.create("/oauth2/authorization/google"))
+                .build();
     }
 
 

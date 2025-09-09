@@ -1,19 +1,17 @@
 package com.hayaan.auth.config;
 
 import com.hayaan.auth.service.CustomUserDetailsService;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,21 +22,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import java.util.Arrays;
-import java.util.List;
-
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] WHITE_LIST_URLS = {"/**", "images/**"};
+    private static final String[] WHITE_LIST = {
+            "/**",
+            "/api/v1/flight/booking",
+            "/api/v1/flights",
+            "/api/v1/airlines",
+            "/api/v1/airports",
+            "/api/v1/flight/payment",
+            "api/v1/flight/payment-confirm",
+            "api/v1/flight/confirm-ticket/**",
+            "api/auth/login",
+            "/public/**",
+            "/actuator/health",
+            "/api/auth/**",
+            "/login/oauth2/**",        // callback
+            "/oauth2/authorization/google/**" // login starter
+    };
+
     private final JwtFilter jwtFilter;
+    private final Oauth2UserService oauth2UserService;
+    private final OAuth2LoginSuccessHandler successHandler;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -50,84 +62,61 @@ public class SecurityConfig {
         return (req, res, ex) -> res.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 
-//    @Bean
-//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-//        registry.addResourceHandler(
-//                "/webjars/**",
-//                "/img/**",
-//                "/css/**",
-//                "/js/**")
-//                .addResourceLocations(
-//                        "classpath:/META-INF/resources/webjars/",
-//                        "classpath:/static/images/",
-//                        "classpath:/static/css/",
-//                        "classpath:/static/js/");
-//    }
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Use the CORS configuration source here
-                .authorizeHttpRequests(request ->
-                        request.requestMatchers(WHITE_LIST_URLS)
-                                .permitAll()
-                                .anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
-        return http.build();
-    }
-    
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    // OLD FILTER CHAIN
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        return
-//                http.csrf().disable()
-//                        .authorizeHttpRequests()
-//                        .requestMatchers(WHITE_LIST_URLS).permitAll()
-//                        .and()
-//                        .authorizeHttpRequests().anyRequest()
-//                        .authenticated().and()
-//                        .sessionManagement()
-//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                        .and()
-//                        .authenticationProvider(authenticationProvider())
-//                        .exceptionHandling().authenticationEntryPoint(authenticationEntryPoint()).and()
-//                        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-//                        .build();
-//    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    // auth provider
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
-    // authentication manager
+    // Spring Boot 2.7 way to expose AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration cfg = new CorsConfiguration();
+        // For production, replace "*" with your allowed origins and setAllowCredentials(true) accordingly
+        cfg.setAllowedOrigins(Arrays.asList("*"));
+        cfg.setAllowedMethods(Arrays.asList("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        cfg.setAllowedHeaders(Arrays.asList("Authorization","Content-Type","X-Requested-With"));
+        cfg.setExposedHeaders(Arrays.asList("Authorization"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", cfg);
+        return source;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // 1) base toggles
+        http.csrf().disable();
+        http.cors().configurationSource(corsConfigurationSource());
+
+        // 2) stateless + entry point
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint());
+
+        // 3) authorize
+        http.authorizeRequests()
+                .antMatchers(WHITE_LIST).permitAll()
+                .anyRequest().authenticated();
+
+        // 4) oauth2
+        http.oauth2Login()
+                .userInfoEndpoint().userService(oauth2UserService).and()
+                .successHandler(successHandler);
+
+        // 5) auth provider + JWT filter
+        http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
 }

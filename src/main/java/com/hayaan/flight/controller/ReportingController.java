@@ -1,12 +1,13 @@
 package com.hayaan.flight.controller;
 
 
-import com.hayaan.flight.object.dto.BookingByUsers;
+import com.hayaan.flight.object.dto.BookingReportResp;
 import com.hayaan.flight.service.ReportService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,14 +18,20 @@ public class ReportingController {
     private final ReportService reportService;
 
     @GetMapping("/agent/bookings")
-    public ResponseEntity<BookingByUsers> getAgentBookings(@RequestParam Long agentId) {
-        BookingByUsers allAgentBooking = reportService.getBookingsByAgent(agentId);
-        return new ResponseEntity<>(allAgentBooking, HttpStatusCode.valueOf(allAgentBooking.getStatus()));
+    public ResponseEntity<BookingReportResp> getAgentBookings(@RequestParam Long agentId) {
+        BookingReportResp allAgentBooking = reportService.getBookingsByAgent(agentId);
+        return ResponseEntity.status(allAgentBooking.getStatus()).body(allAgentBooking);
     }
 
     @GetMapping("/customer/bookings")
-    public ResponseEntity<BookingByUsers> getPassengerBookings(@RequestParam Long customerId) {
-        BookingByUsers allAgentBooking = reportService.getBookingsByPassenger(customerId);
-        return new ResponseEntity<>(allAgentBooking, HttpStatusCode.valueOf(allAgentBooking.getStatus()));
+    public ResponseEntity<BookingReportResp> getPassengerBookings(@RequestParam Long customerId) {
+        BookingReportResp allAgentBooking = reportService.getBookingsByPassenger(customerId);
+        return ResponseEntity.status(allAgentBooking.getStatus()).body(allAgentBooking);
+    }
+
+    @GetMapping("/bookings")
+    public ResponseEntity<BookingReportResp> getAllBookings(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
+        BookingReportResp allAgentBooking = reportService.getAllBookingsByDate(startDate, endDate);
+        return ResponseEntity.status(allAgentBooking.getStatus()).body(allAgentBooking);
     }
 }

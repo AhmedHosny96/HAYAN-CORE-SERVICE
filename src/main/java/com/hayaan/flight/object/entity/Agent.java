@@ -2,7 +2,9 @@ package com.hayaan.flight.object.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.hayaan.auth.object.entity.User;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,16 +46,23 @@ public class Agent {
     private int status;
 
     //    @JsonIgnore
+    @JsonManagedReference
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "TypeId", referencedColumnName = "Id")
 //    @Column(name = "TypeId")
     private AgentType type;
 
-    @Temporal(TemporalType.TIMESTAMP)
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "UserId", referencedColumnName = "Id")
+//    @Column(name = "TypeId")
+    private User user;
+
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "UpdatedAt")
     private LocalDateTime updatedAt;
 

@@ -5,14 +5,12 @@ import com.hayaan.auth.object.dto.*;
 import com.hayaan.auth.object.entity.Role;
 import com.hayaan.auth.service.UserService;
 import com.hayaan.dto.CustomResponse;
-import jakarta.mail.MessagingException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import javax.mail.MessagingException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -46,7 +44,7 @@ public class UserController {
 
     // change password
     @PutMapping("/user/change-password/{userId}")
-    public ResponseEntity<?> getUserDetails(@PathVariable Long userId, @Valid @RequestBody ChangePasswordDto changePasswordDto) {
+    public ResponseEntity<?> getUserDetails(@PathVariable Long userId, @RequestBody ChangePasswordDto changePasswordDto) {
         CustomResponse customResponse = userService.changePassword(userId, changePasswordDto);
         return ResponseEntity.status(customResponse.status()).body(customResponse);
     }
@@ -72,6 +70,12 @@ public class UserController {
         CustomResponse response = userService.createRole(roleDto);
         HttpStatus status = response.status() == 200 ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
         return ResponseEntity.status(status).body(response);
+    }
+
+    @PutMapping("/user/{userId}")
+    public ResponseEntity<CustomResponse> updateUser(@PathVariable Long userId, @RequestBody UpdateUserDto updateUserDto) {
+        CustomResponse response = userService.updateUser(userId, updateUserDto);
+        return ResponseEntity.status(response.status()).body(response);
     }
 
     // TODO: 2/14/2024 USER ROUTES

@@ -1,7 +1,7 @@
 package com.hayaan.flight.object.entity;
 
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Data;
 
 @Entity

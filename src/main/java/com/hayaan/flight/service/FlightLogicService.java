@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -34,6 +35,7 @@ public class FlightLogicService {
 
     private final UserRepository userRepository;
     private final AgentRepo agentRepo;
+    private final PassengerTicketRepo passengerTicketRepo;
     @Value("${flightLogic.endpoint}")
     private String FLIGHT_LOGIC_API;
 
@@ -56,7 +58,19 @@ public class FlightLogicService {
     private final AirportRepository airportRepository;
     private final AirlineRepository airlineRepository;
     private final UserService userService;
+    private final PassengerRepo passengerRepo;
 
+    public PassengerResp getPassengerByPhone(String phone) {
+
+        Optional<Passenger> byPhoneNumber = passengerRepo.findByPhoneNumber(phone);
+
+        return PassengerResp.builder()
+                .status(200)
+                .message("success")
+                .passenger(byPhoneNumber.orElse(null))
+                .build();
+
+    }
 
     // FLIGHT SEARCH ONE WAY / TWO WAY
 
@@ -148,7 +162,7 @@ public class FlightLogicService {
         paxInfo.put("customerEmail", bookingRequestDto.getTravelers().get(0).getEmail());
         paxInfo.put("customerPhone", bookingRequestDto.getTravelers().get(0).getPhoneNumbers().get(0).getPhoneNumber());
         paxInfo.put("fareType", "WebFare");
-        paxInfo.put("bookingNote", "test");
+        paxInfo.put("bookingNote", UUID.randomUUID().toString());
 
         JSONObject paxDetails = new JSONObject();
         JSONArray adultArray = new JSONArray();
@@ -169,7 +183,9 @@ public class FlightLogicService {
             travelerJson.put("passportExpiryDate", traveler.getPassportExpiryDate());
             travelerJson.put("frequentFlyrNum", traveler.getFrequentFlyerNumber());
 
-            Passenger passenger = Passenger.builder().firstName(traveler.getFirstName()).middleName(traveler.getMiddleName()).lastName(traveler.getLastName()).email(traveler.getEmail()).phoneNumber(traveler.getPhoneNumbers().get(0).getPhoneNumber()).document("Passport").documentIdNumber(traveler.getIdNo()).dateOfIssue(LocalDateTime.now()) // Replace with actual issue date
+            Passenger passenger = Passenger.builder().firstName(traveler.getFirstName()).middleName(traveler.getMiddleName()).lastName(traveler.getLastName()).email(traveler.getEmail())
+                    .phoneNumber(Optional.ofNullable(traveler.getPhoneNumbers().get(0).getPhoneNumber()).map(s -> s.trim().replaceFirst("^[+＋]", "")).orElse(null))
+                    .document("Passport").documentIdNumber(traveler.getIdNo()).dateOfBirth(LocalDateTime.now()) // Replace with actual issue date
                     .expiryDate(LocalDateTime.of(2023, 12, 25, 0, 0)) // Replace with actual expiry date
                     .passengerType(traveler.getTravelerType().getCode()).build();
 
@@ -320,7 +336,7 @@ public class FlightLogicService {
                         .totalAmount(roundToTwoDecimalPlaces(convertedFareAmount + commission)) // Round to two decimal places
                         .totalNoOfPassengers(passengers.size())
                         .createdDate(LocalDateTime.now())
-                        .currency("ETB")
+                        .currency(bookingRequestDto.getCurrency())
                         .status(0) // pending
                         .statusDesc("PENDING")
                         .user(user)
@@ -375,7 +391,7 @@ public class FlightLogicService {
         return Math.round(value * 100.0) / 100.0;
     }
 
-
+    @Transactional
     public FlightByPnrCodeResponse getTripInfo(String bookingRef) {
         Optional<TicketHistory> ticketHistoryRepoByPnr = ticketHistoryRepo.findByPnr(bookingRef);
 
@@ -388,12 +404,24 @@ public class FlightLogicService {
 
         TicketHistory ticketHistory = ticketHistoryRepoByPnr.get();
 
-        if (ticketHistory.getStatus() == 2) {
-            return FlightByPnrCodeResponse.builder()
-                    .status(400)
-                    .message(String.format("Booking with reference %s expired, please book flight again", bookingRef))
-                    .build();
-        }
+//        if (Integer.valueOf(2).equals(ticketHistory.getStatus())) {
+//            return FlightByPnrCodeResponse.builder()
+//                    .status(400)
+//                    .message(String.format("Booking with reference %s expired, please book flight again", bookingRef))
+//                    .build();
+//        }
+
+//        User requester = ticketHistory.getUser();
+//        String requesterRole = requester.getRole().getName(); // or requester.getRoles() if it's a list/set
+//
+//        if (isTicketAccessibleByUserOrAgent(ticketHistory, requesterRole, userId, agentId)) {
+//            return FlightByPnrCodeResponse.builder()
+//                    .status(403)
+//                    .message("Only the ticket owner, booking agent, or admin can access this ticket")
+//                    .build();
+//        }
+//
+
 
         JSONObject validationRequest = new JSONObject();
         validationRequest.put("operation", "TripDetails");
@@ -455,7 +483,7 @@ public class FlightLogicService {
 
 
         PriceInfoResponse priceInfo = PriceInfoResponse.builder()
-                .currency(ticketHistory.getCurrency())
+                .currency(ticketHistory.getCurrency().trim())
                 .baseFareAmount(ticketHistory.getTicketAmount())
                 .commissionAmount(ticketHistory.getCommissionAmount())
                 .totalAmount(ticketHistory.getTotalAmount())
@@ -482,18 +510,28 @@ public class FlightLogicService {
                     .build());
         }
 
-        List<TravelerResponse> travelerResponses = ticketHistory.getPassengers().stream().map(p -> TravelerResponse.builder()
-                .passengerType(p.getPassengerType())
-                .firstName(p.getFirstName())
-                .middleName(p.getMiddleName())
-                .lastName(p.getLastName())
-                .phoneNumber(p.getPhoneNumber())
-                .build()).collect(Collectors.toList());
+        List<Passenger> passengers = passengerTicketRepo.findByTicketHistory(ticketHistory)
+                .stream()
+                .map(PassengerTicket::getPassenger)
+                .toList();
+
+        List<TravelerResponse> travelerResponses = passengers.stream()
+                .map(p -> TravelerResponse.builder()
+                        .passengerType(p.getPassengerType())
+                        .title(p.getTitle())
+                        .gender(p.getGender())
+                        .firstName(p.getFirstName())
+                        .middleName(p.getMiddleName())
+                        .lastName(p.getLastName())
+                        .email(p.getEmail())
+                        .phoneNumber(p.getPhoneNumber())
+                        .build()).toList();
 
         return FlightByPnrCodeResponse.builder()
                 .status(200)
                 .message("Success")
                 .pnrCode(ticketHistory.getPnr())
+                .userId(ticketHistory.getUser().getId())
                 .version(1)
                 .bookingStatus(ticketHistory.getStatusDesc())
                 .travelers(travelerResponses)
@@ -585,8 +623,8 @@ public class FlightLogicService {
             return new CustomResponse(400, "Ticket cannot be confirmed please pay the ticket using payment gateways", null);
         }
 
-        if (payment.getPaymentStatus() == 1 || payment.getPaymentStatus() == 3) {
-            return new CustomResponse(400, "Ticket payment is still pending or failed", null);
+        if (payment.getPaymentStatus() == 1) {
+            return new CustomResponse(400, "Ticket payment is still pending", null);
         }
 
         var orderTicketRequest = new JSONObject().put("operation", "OrderTicket").put("UniqueID", pnr);
@@ -965,8 +1003,10 @@ public class FlightLogicService {
         log.info("ptrUniqueId : {}", ptrUniqueId);
 
         ticketHistory.setPtrUniqueID(ptrUniqueId);
-
+        ticketHistory.setStatus(5);
+        ticketHistory.setStatusDesc("REISSUED");
         ticketHistoryRepo.save(ticketHistory);
+
         // Final success response
         return ReissueTicketResponse.builder()
                 .status(200)
@@ -978,17 +1018,21 @@ public class FlightLogicService {
     }
     // post ticket status
 
-    public ReissueTicketResponse getReissueTicketResponse(String pnr, Long ptrUniqueId) {
+    public ReissueTicketResponse getReissueTicketStatus(String pnr) {
 
-        Optional<TicketHistory> existingRecord = ticketHistoryRepo.findByPnrAndPtrUniqueID(pnr, ptrUniqueId);
+        Optional<TicketHistory> reissuedTicketOptional = ticketHistoryRepo.findByPnrAndStatus(pnr,5 );
 
         // Reverse condition: only return error if NOT found
-        if (!existingRecord.isPresent()) {
+        if (!reissuedTicketOptional.isPresent()) {
             return ReissueTicketResponse.builder()
                     .status(400)
-                    .message("Pnr / ptrUniqueId not found")
+                    .message("Pnr not found or no change requested for this ticket")
                     .build();
         }
+
+        TicketHistory ticketHistory = reissuedTicketOptional.get();
+
+        Long ptrUniqueId = ticketHistory.getPtrUniqueID();
 
         var postTicketRequest = new JSONObject()
                 .put("operation", "PostTicketStatus")
@@ -1055,6 +1099,7 @@ public class FlightLogicService {
                 //.passengers(passengers)
                 .build();
     }
+
 
 
 }

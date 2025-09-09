@@ -1,9 +1,6 @@
 package com.hayaan.flight.object.dto.booking;
 
 import com.hayaan.flight.object.dto.AirPriceInfoResponse;
-import com.hayaan.flight.object.dto.AirPriceSolution;
-import com.hayaan.flight.object.dto.flight.AirInfoResponse;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,7 +10,7 @@ import java.util.List;
 @Builder
 public class BookingRequestDto {
 
-    @NotBlank(message = "Currency can't be empty")
+    //@NotBlank(message = "Currency can't be empty")
     private String currency;
     private List<TravelersDto> travelers;
     private List<AirPriceInfoResponse> airPriceInfo;

@@ -1,7 +1,6 @@
 package com.hayaan.flight.object.entity;
 
-import com.hayaan.dto.PassengerType;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +32,12 @@ public class Passenger {
     @Column(name = "Email")
     private String email;
 
+    @Column(name = "Title")
+    private String title;
+
+    @Column(name = "Gender")
+    private String gender;
+
     @Column(name = "PhoneNumber")
     private String phoneNumber;
 
@@ -42,8 +47,8 @@ public class Passenger {
     @Column(name = "DocumentIdNumber")
     private String documentIdNumber;
 
-    @Column(name = "DateOfIssue")
-    private LocalDateTime dateOfIssue;
+    @Column(name = "DateOfBirth")
+    private LocalDateTime dateOfBirth;
 
     @Column(name = "ExpiryDate")
     private LocalDateTime expiryDate;
@@ -51,7 +56,7 @@ public class Passenger {
     @Column(name = "PassengerType")
     private String passengerType; // A - Adult, C - Child, I - Infant
 
-    @ManyToOne
-    @JoinColumn(name = "TicketHistoryId", nullable = false)
-    private TicketHistory ticketHistory;
+//    @ManyToOne
+//    @JoinColumn(name = "TicketHistoryId", nullable = false)
+//    private TicketHistory ticketHistory;
 }

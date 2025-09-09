@@ -2,30 +2,18 @@ package com.hayaan.flight.controller;
 
 
 import com.hayaan.dto.CustomResponse;
-import com.hayaan.flight.object.dto.AirPriceSolution;
-import com.hayaan.flight.object.dto.AirlineListResp;
-import com.hayaan.flight.object.dto.AirportListResp;
-import com.hayaan.flight.object.dto.AllCountryResp;
+import com.hayaan.flight.object.dto.*;
 import com.hayaan.flight.object.dto.booking.BookingRequestDto;
 import com.hayaan.flight.object.dto.booking.BookingResponse;
 import com.hayaan.flight.object.dto.booking.FlightByPnrCodeResponse;
-import com.hayaan.flight.object.dto.booking.FlightByPnrDto;
 import com.hayaan.flight.object.dto.flight.FlightPriceSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchDto;
 import com.hayaan.flight.object.dto.flight.FlightSearchResponse;
 import com.hayaan.flight.service.CountryService;
 import com.hayaan.flight.service.FlightLogicService;
 import com.hayaan.flight.service.TravelPortService;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,11 +32,17 @@ public class FlightController {
 
     private final CountryService countryService;
 
+    @GetMapping("/customer")
+    public ResponseEntity<PassengerResp> getPassengerByPhone(@RequestParam String phone) {
+        PassengerResp passengerByPhone = flightLogicService.getPassengerByPhone(phone);
+        return new ResponseEntity<>(passengerByPhone, HttpStatus.valueOf(passengerByPhone.getStatus()));
+    }
+
     @GetMapping("/countries")
     public ResponseEntity<AllCountryResp> getAllCountries() {
         AllCountryResp allCountries = countryService.getAllCountries();
 
-        return new ResponseEntity<>(allCountries, HttpStatusCode.valueOf(allCountries.getStatus()));
+        return ResponseEntity.status(allCountries.getStatus()).body(allCountries);
 
     }
 
@@ -66,58 +60,74 @@ public class FlightController {
 
     public ResponseEntity<AirportListResp> getAirports() {
         AirportListResp allAirports = flightLogicService.getAllAirports();
-        return new ResponseEntity<>(allAirports, HttpStatusCode.valueOf(allAirports.getStatus()));
+        return ResponseEntity.status(allAirports.getStatus()).body(allAirports);
     }
 
     @GetMapping("/airlines")
-    @Tag(name = "Airlines", description = "Fetch all airlines")
+    //@Tag(name = "Airlines", description = "Fetch all airlines")
     public ResponseEntity<AirlineListResp> getAirlines() {
         AirlineListResp allAirlines = flightLogicService.getAllAirlines();
-        return new ResponseEntity<>(allAirlines, HttpStatusCode.valueOf(allAirlines.getStatus()));
+        return ResponseEntity.status(allAirlines.getStatus()).body(allAirlines);
     }
 
     @GetMapping("/flight/confirm-ticket")
-    @Tag(name = "Flight Booking", description = "Confirm ticket booking")
+    //@Tag(name = "Flight Booking", description = "Confirm ticket booking")
     public ResponseEntity<CustomResponse> confirmTicket(@RequestParam("pnrCode") String pnrCode) {
         CustomResponse confirmTicketResponse = flightLogicService.confirmTicket(pnrCode);
-        return new ResponseEntity<>(confirmTicketResponse, HttpStatusCode.valueOf(confirmTicketResponse.status()));
+        return ResponseEntity.status(confirmTicketResponse.status()).body(confirmTicketResponse);
     }
 
     @GetMapping("/flight/cancel")
-    @Tag(name = "Flight cancel", description = "Cancel ticket ")
+    //@Tag(name = "Flight cancel", description = "Cancel ticket ")
     public ResponseEntity<CustomResponse> cancelFlight(@RequestParam("pnrCode") String pnrCode) {
         CustomResponse confirmTicketResponse = travelPortService.cancelFlight(pnrCode);
-        return new ResponseEntity<>(confirmTicketResponse, HttpStatusCode.valueOf(confirmTicketResponse.status()));
+        return ResponseEntity.status(confirmTicketResponse.status()).body(confirmTicketResponse);
     }
 
 
     @GetMapping("/flight") // confirms ticket in travel port
-    @Tag(name = "Flight Details", description = "Retrieve flight details by PNR code")
+    //@Tag(name = "Flight Details", description = "Retrieve flight details by PNR code")
     public ResponseEntity<FlightByPnrCodeResponse> getFlightByPnrCode(@RequestParam("pnrCode") String pnrCode) {
         FlightByPnrCodeResponse flightByPnr = flightLogicService.getTripInfo(pnrCode);
-        return new ResponseEntity<>(flightByPnr, HttpStatusCode.valueOf(flightByPnr.getStatus()));
+        return ResponseEntity.status(flightByPnr.getStatus()).body(flightByPnr);
     }
 
 
     @PostMapping("/flights/availability")
-    @Tag(name = "Flight Availability", description = "Search all available flights")
-    public ResponseEntity<FlightSearchResponse> searchAllAvailableFlights(@Valid @RequestBody FlightSearchDto flightSearchDto) {
+    //@Tag(name = "Flight Availability", description = "Search all available flights")
+    public ResponseEntity<FlightSearchResponse> searchAllAvailableFlights(@RequestBody FlightSearchDto flightSearchDto) {
         FlightSearchResponse flightSearchResponse = flightLogicService.searchFlight(flightSearchDto);
-        return new ResponseEntity<>(flightSearchResponse, HttpStatusCode.valueOf(flightSearchResponse.getStatus()));
+        return ResponseEntity.status(flightSearchResponse.getStatus()).body(flightSearchResponse);
     }
 
     @PostMapping("/flight/detail")
-    @Tag(name = "Flight Detail", description = "Search single flight detail")
+    //@Tag(name = "Flight Detail", description = "Search single flight detail")
     public ResponseEntity<AirPriceSolution> searchFlight(@RequestBody FlightPriceSearchDto flightSearchDto) {
         AirPriceSolution airPriceSolution = travelPortService.searchFlightWithPrice(flightSearchDto);
-        return new ResponseEntity<>(airPriceSolution, HttpStatusCode.valueOf(airPriceSolution.getStatus()));
+        return ResponseEntity.status(airPriceSolution.getStatus()).body(airPriceSolution);
     }
 
     @PostMapping("/flight/booking")
-    @Tag(name = "Flight Booking", description = "Book a flight")
-    public ResponseEntity<?> bookFlight(@Valid @RequestBody BookingRequestDto bookingRequestDto) {
+    //@Tag(name = "Flight Booking", description = "Book a flight")
+    public ResponseEntity<?> bookFlight(@RequestBody BookingRequestDto bookingRequestDto) {
         BookingResponse bookingResponse = flightLogicService.bookFlight(bookingRequestDto);
-        return new ResponseEntity<>(bookingResponse, HttpStatusCode.valueOf(bookingResponse.getStatus()));
+        return ResponseEntity.status(bookingResponse.getStatus()).body(bookingResponse);
+    }
+
+    // REISSUE TICKET / CHANGE TICKET
+    @GetMapping("/flight/reissue")
+    //@Tag(name = "Flight logic reissue ticket", description = "Flight logic reissue ticket")
+    public ResponseEntity<ReissueTicketResponse> reissueTicket(@RequestParam String pnr, @RequestParam LocalDate departureDate) {
+        ReissueTicketResponse reissueTicketResponse = flightLogicService.reissueTicket(pnr, departureDate);
+        return ResponseEntity.status(reissueTicketResponse.getStatus()).body(reissueTicketResponse);
+    }
+
+    // REISSUING STATUS
+    @GetMapping("/flight/reissue/status")
+    //@Tag(name = "Flight logic reissue ticket", description = "Flight logic reissue ticket status")
+    public ResponseEntity<ReissueTicketResponse> getFlight(@RequestParam String pnr) {
+        ReissueTicketResponse reissueTicketResponse = flightLogicService.getReissueTicketStatus(pnr);
+        return ResponseEntity.status(reissueTicketResponse.getStatus()).body(reissueTicketResponse);
     }
 
 }

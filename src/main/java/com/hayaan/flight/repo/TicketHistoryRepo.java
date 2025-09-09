@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,8 +28,9 @@ public interface TicketHistoryRepo extends JpaRepository<TicketHistory, Long> {
 
     List<TicketHistory> findByUser(User user);
 
-    @Query("SELECT DISTINCT t FROM TicketHistory t JOIN t.passengers p WHERE p.id = :passengerId")
-    List<TicketHistory> findByPassengerId(@Param("passengerId") Long passengerId);
+//    @Query("SELECT DISTINCT t FROM TicketHistory t JOIN t.passengers p WHERE p.id = :passengerId")
+//    List<TicketHistory> findByPassengerId(@Param("passengerId") Long passengerId);
 
 
+    List<TicketHistory> findAllByCreatedDateBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

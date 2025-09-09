@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class BookingPaymentDto {
-
     private String pnr;
     private String paymentMethod;
     private String payerAccount;
+    private String currency;
 }

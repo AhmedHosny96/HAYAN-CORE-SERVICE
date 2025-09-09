@@ -8,7 +8,6 @@ public record CreateUserDto(
         String phoneNumber,
         String fullName,
         int roleId,
-        int agentId,
         String createdBy
 ) {
 }

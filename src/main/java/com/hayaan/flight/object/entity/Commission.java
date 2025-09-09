@@ -3,7 +3,7 @@ package com.hayaan.flight.object.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hayaan.auth.object.entity.User;
 import com.hayaan.flight.object.FlightType;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,11 +49,11 @@ public class Commission {
     @Enumerated(EnumType.STRING)
     private FlightType flightType;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CreatedAt", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    //@Temporal(TemporalType.TIMESTAMP)
     @Column(name = "UpdatedAt")
     private LocalDateTime updatedAt;
 

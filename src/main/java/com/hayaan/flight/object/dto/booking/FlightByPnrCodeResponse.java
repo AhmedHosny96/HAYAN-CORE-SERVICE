@@ -20,6 +20,7 @@ public class FlightByPnrCodeResponse {
     private int status;
     private String message;
     private String pnrCode;
+    private Long userId;
     private int version;
     private String bookingStatus;
 

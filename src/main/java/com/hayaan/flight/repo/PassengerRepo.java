@@ -13,6 +13,9 @@ import java.util.Optional;
 public interface PassengerRepo extends JpaRepository<Passenger, Long> {
 
 
-    @Query("SELECT p FROM Passenger p WHERE p.ticketHistory.id = :ticketHistoryId")
-    Optional<List<Passenger>> findByTicketHistoryId(@Param("ticketHistoryId") Long ticketHistoryId);
+//    @Query("SELECT p FROM Passenger p WHERE p.ticketHistory.id = :ticketHistoryId")
+//    Optional<List<Passenger>> findByTicketHistoryId(@Param("ticketHistoryId") Long ticketHistoryId);
+
+    Optional<Passenger> findByPhoneNumber(String phoneNumber);
+
 }

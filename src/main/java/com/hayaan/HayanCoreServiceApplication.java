@@ -5,6 +5,9 @@ import com.hayaan.flight.repo.CurrencyRepository;
 import com.hayaan.flight.service.FlightLogicService;
 import com.hayaan.notification.NotificationService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,25 +15,41 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.time.Duration;
 
 @Slf4j
 @SpringBootApplication
-@EnableAsync
+//@EnableAsync
 @EnableCaching
 @EnableScheduling
 @EntityScan(basePackageClasses = {HayanCoreServiceApplication.class})
 public class HayanCoreServiceApplication implements CommandLineRunner {
 
+    @Bean
+    public RestTemplate restTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        final HttpComponentsClientHttpRequestFactory factory =
+                new HttpComponentsClientHttpRequestFactory();
+        CloseableHttpClient build =
+                HttpClientBuilder.create().disableRedirectHandling().build();
+        factory.setHttpClient(build);
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
 
     @Bean
     public ModelMapper modelMapper() {
-
         return new ModelMapper();
     }
 // 140892 -> 232878

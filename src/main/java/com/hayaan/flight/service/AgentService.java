@@ -1,5 +1,10 @@
 package com.hayaan.flight.service;
 
+import com.hayaan.auth.object.dto.CreateUserDto;
+import com.hayaan.auth.object.entity.User;
+import com.hayaan.auth.repo.RoleRepo;
+import com.hayaan.auth.repo.UserRepository;
+import com.hayaan.auth.service.UserService;
 import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.AgentStatusChangeDto;
 import com.hayaan.flight.object.dto.CreateAgentDto;
@@ -11,6 +16,7 @@ import com.hayaan.flight.repo.AgentTypeRepo;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +29,9 @@ public class AgentService {
     private final AgentTypeRepo agentTypeRepo;
 
     private final ModelMapper modelMapper;
+    private final RoleRepo roleRepo;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
     // AGENT TYPE METHODS
     public CustomResponse createAgentType(CreateAgentTypeDto agentTypeDto) {
@@ -60,28 +69,59 @@ public class AgentService {
     }
 
     // AGENT FEATURES
+    @Transactional
     public CustomResponse createAgent(CreateAgentDto createAgentDto) {
         Optional<Agent> byName = agentRepo.findByName(createAgentDto.getName());
-
         if (byName.isPresent()) {
-            return new CustomResponse(400, "Type already exists", null);
+            return new CustomResponse(400, "Agent name already exists", null);
         }
 
-        AgentType agentType = agentTypeRepo.findById(createAgentDto.getTypeId()).get();
-        var agent = Agent.builder()
+        AgentType agentType = agentTypeRepo.findById(createAgentDto.getTypeId())
+                .orElseThrow(() -> new RuntimeException("Invalid agent type"));
+
+        Agent agent = Agent.builder()
                 .name(createAgentDto.getName())
                 .contactPerson(createAgentDto.getContactPerson())
                 .country(createAgentDto.getCountry())
                 .city(createAgentDto.getCity())
                 .type(agentType)
                 .contactEmail(createAgentDto.getContactEmail())
-                .status(1) // Set the status here
+                .contactPhone(createAgentDto.getContactPhone())
+                .status(1)
                 .build();
+
+        agent = agentRepo.save(agent); // Save agent first
+
+        // Prepare CreateUserDto
+        CreateUserDto createUserDto = new CreateUserDto(
+                agent.getName(),
+                agent.getContactEmail(),
+                agent.getContactPhone(),
+                agent.getName(),
+                roleRepo.findByName("AGENT").orElseThrow().getId(),
+                "SYSTEM"
+        );
+
+        CustomResponse userResponse = userService.createUser(createUserDto);
+
+        if (userResponse.status() != 200) {
+            throw new RuntimeException("User creation failed: " + userResponse.message()); // Triggers rollback
+        }
+
+        // Fetch the created user and link it
+        Optional<User> createdUserOpt = userRepository.findByUsername(agent.getName());
+        if (createdUserOpt.isEmpty()) {
+            throw new RuntimeException("Created user not found for linking");
+        }
+
+        User createdUser = createdUserOpt.get();
+        agent.setUser(createdUser);
+        createdUser.setAgent(agent);
+
         agentRepo.save(agent);
 
         return new CustomResponse(200, "Agent created successfully", null);
     }
-
     public List<?> getAllAgents() {
         return agentRepo.findAll();
     }

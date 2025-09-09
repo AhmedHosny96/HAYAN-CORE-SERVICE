@@ -31,7 +31,7 @@ public class AsyncHttpConfig {
                 .setCompressionEnforced(true)
                 .setMaxConnections(100)
                 .setPooledConnectionIdleTimeout(20000)
-                .setRequestTimeout(50000)
+                .setRequestTimeout(180000)
                 .setMaxConnectionsPerHost(5000)
                 .setSslContext(sc)
                 .build();

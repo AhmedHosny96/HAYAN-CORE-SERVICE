@@ -1,11 +1,18 @@
 package com.hayaan.flight.service;
 
+import com.hayaan.auth.object.dto.CreateUserDto;
+import com.hayaan.auth.object.entity.User;
+import com.hayaan.auth.repo.RoleRepo;
+import com.hayaan.auth.repo.UserRepository;
+import com.hayaan.auth.service.UserService;
+import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.object.dto.PaymentStageDto;
 import com.hayaan.flight.object.dto.TicketHistoryDto;
 import com.hayaan.flight.object.entity.Passenger;
 import com.hayaan.flight.object.entity.Payment;
 import com.hayaan.flight.object.entity.TicketHistory;
 import com.hayaan.flight.repo.PassengerRepo;
+import com.hayaan.flight.repo.PassengerTicketRepo;
 import com.hayaan.flight.repo.PaymentRepository;
 import com.hayaan.flight.repo.TicketHistoryRepo;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +21,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @RequiredArgsConstructor
 @Service
@@ -25,28 +34,69 @@ public class TransactionService {
     private final TicketHistoryRepo ticketHistoryRepo;
     private final PaymentRepository paymentRepository;
     private final PassengerRepo passengerRepo;
+    private final PassengerTicketRepo passengerTicketRepo;
+    private final UserRepository userRepository;
+    private final RoleRepo roleRepo;
+    private final UserService userService;
 
     @Transactional
     public TicketHistory saveTicketHistoryWithPassengers(TicketHistory ticketHistory, List<Passenger> passengers) {
-        // Check if a ticket with the same PNR already exists
-        Optional<TicketHistory> existingTicketHistory = ticketHistoryRepo.findByPnr(ticketHistory.getPnr());
 
+        Optional<TicketHistory> existingTicketHistory = ticketHistoryRepo.findByPnr(ticketHistory.getPnr());
         if (existingTicketHistory.isPresent()) {
-            // If the ticket already exists, return the existing ticket history
             return existingTicketHistory.get();
         }
 
-        // Save the new ticket history if it doesn't exist
         TicketHistory savedTicketHistory = ticketHistoryRepo.save(ticketHistory);
+        List<PassengerTicket> passengerTickets = new ArrayList<>();
 
-        // Save the associated passengers
-        for (Passenger passenger : passengers) {
-            passenger.setTicketHistory(savedTicketHistory);
-            passengerRepo.save(passenger);
+        for (Passenger passengerInput : passengers) {
+            Passenger passenger = passengerRepo.findByPhoneNumber(passengerInput.getPhoneNumber())
+                    .orElseGet(() -> {
+                        passengerInput.setId(null);
+                        return passengerRepo.save(passengerInput);
+                    });
+
+            PassengerTicket mapping = new PassengerTicket();
+            mapping.setPassenger(passenger);
+            mapping.setTicketHistory(savedTicketHistory);
+            passengerTickets.add(mapping);
         }
 
-        return savedTicketHistory; // Return the newly saved ticket history
+        passengerTicketRepo.saveAll(passengerTickets);
+
+        Passenger primary = passengerTickets.get(0).getPassenger();
+        User user;
+
+        Optional<User> userOpt = userRepository.findByPhoneNumber(primary.getPhoneNumber());
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            log.info("User with phone number {} already exists. Linking to ticket.", primary.getPhoneNumber());
+        } else {
+            int random4Number = new Random().nextInt(9000) + 1000;
+            String username = primary.getFirstName() + random4Number;
+
+            CreateUserDto createUserDto = new CreateUserDto(
+                    username,
+                    primary.getEmail(),
+                    primary.getPhoneNumber(),
+                    primary.getFirstName() + primary.getMiddleName() + primary.getLastName(),
+                    roleRepo.findByName("CUSTOMER").orElseThrow(() -> new IllegalStateException("Role CUSTOMER not found")).getId(),
+                    "SYSTEM"
+            );
+
+            CustomResponse userResp = userService.createUser(createUserDto);
+            log.info("User created for passenger: {}", userResp.message());
+
+            user = userRepository.findByPhoneNumber(primary.getPhoneNumber())
+                    .orElseThrow(() -> new IllegalStateException("User creation succeeded but user not found"));
+        }
+
+        // Attach userId to ticketHistory and save
+        savedTicketHistory.setUser(user);
+        return ticketHistoryRepo.save(savedTicketHistory);
     }
+
 
 
     // save ticket history

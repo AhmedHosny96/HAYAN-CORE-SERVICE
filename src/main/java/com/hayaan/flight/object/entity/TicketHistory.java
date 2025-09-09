@@ -4,7 +4,7 @@ package com.hayaan.flight.object.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.hayaan.auth.object.entity.User;
 import com.hayaan.dto.TravelType;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -101,8 +101,8 @@ public class TicketHistory {
     @Column(name = "StatusDesc")
     private String statusDesc;
 
-    @OneToMany(mappedBy = "ticketHistory", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
-    private List<Passenger> passengers;
+//    @OneToMany(mappedBy = "ticketHistory", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JsonBackReference
+//    private List<Passenger> passengers;
 
 }

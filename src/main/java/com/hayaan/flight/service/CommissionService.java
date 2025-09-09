@@ -240,6 +240,8 @@ public class CommissionService {
         // Retrieve commission details from the repository
         List<Commission> commissions = commissionRepo.findByFlightTypeAndUserType(flightType, userType);
 
+//        log.info("commissions : {}", commissions);
+
         if (commissions.isEmpty()) {
             throw new IllegalArgumentException("Commission not found for the given flight type and user type.");
         }

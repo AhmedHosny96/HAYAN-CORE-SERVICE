@@ -10,14 +10,16 @@ import com.hayaan.dto.CustomResponse;
 import com.hayaan.flight.repo.AgentRepo;
 import com.hayaan.flight.repo.CommissionRepo;
 import com.hayaan.notification.NotificationService;
-import jakarta.mail.MessagingException;
+import javax.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDate;
@@ -202,7 +204,10 @@ public class UserService {
 
 
     // CREATE NEW USER
-    public CustomResponse createUser(CreateUserDto userDto) throws MessagingException {
+
+    @SneakyThrows
+    @Transactional
+    public CustomResponse createUser(CreateUserDto userDto) {
 
 
         Optional<User> byUsername = userRepository.findByUsername(userDto.username());
@@ -272,5 +277,135 @@ public class UserService {
 
         return new CustomResponse(200, "User created successfully", null);
 
+    }
+
+    public CustomResponse updateUser(Long userId, UpdateUserDto updateUserDto) {
+        try {
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty()) {
+                return new CustomResponse(404, "User not found", null);
+            }
+
+            User user = userOpt.get();
+
+            // Update fields if provided
+            if (updateUserDto.getUsername() != null && !updateUserDto.getUsername().trim().isEmpty()) {
+                // Check if username already exists for another user
+                Optional<User> existingUser = userRepository.findByUsername(updateUserDto.getUsername());
+                if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+                    return new CustomResponse(409, "Username already exists", null);
+                }
+                user.setUsername(updateUserDto.getUsername().trim());
+            }
+
+            if (updateUserDto.getEmail() != null && !updateUserDto.getEmail().trim().isEmpty()) {
+                // Check if email already exists for another user
+                Optional<User> existingUser = userRepository.findByEmail(updateUserDto.getEmail());
+                if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+                    return new CustomResponse(409, "Email already exists", null);
+                }
+                user.setEmail(updateUserDto.getEmail().trim());
+            }
+
+            if (updateUserDto.getPhoneNumber() != null && !updateUserDto.getPhoneNumber().trim().isEmpty()) {
+                // Check if phone number already exists for another user
+                Optional<User> existingUser = userRepository.findByPhoneNumber(updateUserDto.getPhoneNumber());
+                if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+                    return new CustomResponse(409, "Phone number already exists", null);
+                }
+                user.setPhoneNumber(updateUserDto.getPhoneNumber().trim());
+            }
+
+            if (updateUserDto.getFullName() != null && !updateUserDto.getFullName().trim().isEmpty()) {
+                user.setFullName(updateUserDto.getFullName().trim());
+            }
+
+            if (updateUserDto.getRoleId() != null) {
+                Optional<Role> roleOpt = roleRepo.findById(updateUserDto.getRoleId().intValue());
+                if (roleOpt.isEmpty()) {
+                    return new CustomResponse(400, "Invalid role ID", null);
+                }
+                user.setRole(roleOpt.get());
+            }
+
+            if (updateUserDto.getStatus() != null) {
+                user.setStatus(updateUserDto.getStatus());
+            }
+
+            userRepository.save(user);
+
+            log.info("User updated successfully: {}", userId);
+            return new CustomResponse(200, "User updated successfully", null);
+
+        } catch (Exception e) {
+            log.error("Error updating user", e);
+            return new CustomResponse(500, "Unable to update user", null);
+        }
+    }
+
+    public CustomResponse authenticateWithGoogle(GoogleAuthDto googleAuthDto) {
+        try {
+            if (googleAuthDto.getGoogleToken() == null || googleAuthDto.getGoogleToken().trim().isEmpty()) {
+                return new CustomResponse(400, "Google token is required", null);
+            }
+
+            if (googleAuthDto.getEmail() == null || googleAuthDto.getEmail().trim().isEmpty()) {
+                return new CustomResponse(400, "Email is required from Google", null);
+            }
+
+            // Check if user already exists
+            Optional<User> existingUser = userRepository.findByEmail(googleAuthDto.getEmail());
+            
+            User user;
+            if (existingUser.isPresent()) {
+                user = existingUser.get();
+                log.info("Existing user authenticated with Google: {}", user.getEmail());
+            } else {
+                // Create new user
+                Optional<Role> customerRole = roleRepo.findByName("CUSTOMER");
+                if (customerRole.isEmpty()) {
+                    return new CustomResponse(500, "Customer role not found", null);
+                }
+
+                String fullName = "";
+                if (googleAuthDto.getFirstName() != null) {
+                    fullName += googleAuthDto.getFirstName();
+                }
+                if (googleAuthDto.getLastName() != null) {
+                    fullName += " " + googleAuthDto.getLastName();
+                }
+
+                // Generate username from email
+                String username = googleAuthDto.getEmail().split("@")[0];
+                
+                // Check if username exists and make it unique if necessary
+                int counter = 1;
+                String originalUsername = username;
+                while (userRepository.findByUsername(username).isPresent()) {
+                    username = originalUsername + counter;
+                    counter++;
+                }
+
+                user = User.builder()
+                        .username(username)
+                        .email(googleAuthDto.getEmail().toLowerCase().trim())
+                        .fullName(fullName.trim())
+                        .role(customerRole.get())
+                        .status(1) // Active
+                        .isPasswordChanged(true) // Google users don't need to change password
+                        .createdDate(LocalDateTime.now())
+                        .password(passwordEncoder.encode("GOOGLE_AUTH_" + System.currentTimeMillis())) // Random password
+                        .build();
+
+                userRepository.save(user);
+                log.info("New user created via Google auth: {}", user.getEmail());
+            }
+
+            return new CustomResponse(200, "Google authentication successful", null);
+
+        } catch (Exception e) {
+            log.error("Error with Google authentication", e);
+            return new CustomResponse(500, "Unable to authenticate with Google", null);
+        }
     }
 }

@@ -529,86 +529,86 @@ public class TravelPortService {
     }
     // GET BOOKING BY PNR CODE
 
-    public FlightByPnrCodeResponse findFlightByPnr(String pnrCode) {
-
-        var requestBody = new JSONObject();
-        requestBody.put("locatorCode", pnrCode);
-
-        log.info("RETRIEVE FLIGHT BY PNR : {}", requestBody);
-
-        RequestBuilder requestBuilder = new RequestBuilder("POST")
-                .setUrl(TRAVELPORT_URL + "/retrieve")
-                .setBody(requestBody.toString());
-
-        JSONObject flightRetrieveResponse = asyncHttp.sendRequest(requestBuilder);
-
-        log.info("RETRIEVE FLIGHT RESPONSE : {}", flightRetrieveResponse);
-
-        // MAP ERROR RESPONSE
-
-        if (flightRetrieveResponse.has("status")) {
-
-            return FlightByPnrCodeResponse.builder()
-                    .status(400)
-                    .message(flightRetrieveResponse.optString("details"))
-                    .build();
-        }
-        // MAP SUCCESS RESPONSE
-
-        JSONObject universalRecord = flightRetrieveResponse.getJSONObject("universalRecord");
-
-        String pnr = universalRecord.optString("locatorCode");
-        String bookingStatus = universalRecord.optString("status");
-        int version = universalRecord.optInt("version");
-
-        JSONArray bookingTraveler = universalRecord.getJSONArray("bookingTraveler");
-
-        // MAP TRAVELERS TO LIST
-        List<TravelerResponse> travelerResponseList = mapperService.mapToTravelerResponse(bookingTraveler);
-
-        // MAP AIR INFO
-
-        JSONArray airReservation = universalRecord.getJSONArray("airReservation");
-
-        JSONObject airSegment = airReservation.getJSONObject(0).getJSONArray("airSegment").getJSONObject(0);
-
-
-        AirInfoResponse airInfoResponse = mapperService.mapToAirInfo(airSegment);
-
-        log.info("AIR RESERVATION: {}", airReservation);
-
-        JSONArray airPricingInfoObj = airReservation.getJSONObject(0).getJSONArray("airPricingInfo");
-
-
-        JSONArray bookingInfo = airPricingInfoObj.getJSONObject(0).getJSONArray("bookingInfo");
-
-        PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
-
-        // map the bookin info
-        BookingInfoResponse bookingInfoResponse = mapperService.mapToBookingInfo(bookingInfo.getJSONObject(0));
-
-        // map the passengerType
-
-        JSONArray passengerType = airPricingInfoObj.getJSONObject(0).getJSONArray("passengerType");
-
-        log.info("PASSENGER INFO : {}", passengerType);
-
-        List<PassengerType> passengerTypeList = mapperService.mapPassengerTypes(passengerType);
-
+//    public FlightByPnrCodeResponse findFlightByPnr(String pnrCode) {
+//
+//        var requestBody = new JSONObject();
+//        requestBody.put("locatorCode", pnrCode);
+//
+//        log.info("RETRIEVE FLIGHT BY PNR : {}", requestBody);
+//
+//        RequestBuilder requestBuilder = new RequestBuilder("POST")
+//                .setUrl(TRAVELPORT_URL + "/retrieve")
+//                .setBody(requestBody.toString());
+//
+//        JSONObject flightRetrieveResponse = asyncHttp.sendRequest(requestBuilder);
+//
+//        log.info("RETRIEVE FLIGHT RESPONSE : {}", flightRetrieveResponse);
+//
+//        // MAP ERROR RESPONSE
+//
+//        if (flightRetrieveResponse.has("status")) {
+//
+//            return FlightByPnrCodeResponse.builder()
+//                    .status(400)
+//                    .message(flightRetrieveResponse.optString("details"))
+//                    .build();
+//        }
+//        // MAP SUCCESS RESPONSE
+//
+//        JSONObject universalRecord = flightRetrieveResponse.getJSONObject("universalRecord");
+//
+//        String pnr = universalRecord.optString("locatorCode");
+//        String bookingStatus = universalRecord.optString("status");
+//        int version = universalRecord.optInt("version");
+//
+//        JSONArray bookingTraveler = universalRecord.getJSONArray("bookingTraveler");
+//
+//        // MAP TRAVELERS TO LIST
+//        List<TravelerResponse> travelerResponseList = mapperService.mapToTravelerResponse(bookingTraveler);
+//
+//        // MAP AIR INFO
+//
+//        JSONArray airReservation = universalRecord.getJSONArray("airReservation");
+//
+//        JSONObject airSegment = airReservation.getJSONObject(0).getJSONArray("airSegment").getJSONObject(0);
+//
+//
+//        AirInfoResponse airInfoResponse = mapperService.mapToAirInfo(airSegment);
+//
+//        log.info("AIR RESERVATION: {}", airReservation);
+//
+//        JSONArray airPricingInfoObj = airReservation.getJSONObject(0).getJSONArray("airPricingInfo");
+//
+//
+//        JSONArray bookingInfo = airPricingInfoObj.getJSONObject(0).getJSONArray("bookingInfo");
+//
 //        PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
-        return FlightByPnrCodeResponse.builder()
-                .status(200)
-                .message("success")
-                .bookingStatus(bookingStatus)
-                .pnrCode(pnr)
-                .version(version)
-                .travelers(travelerResponseList)
-                .bookingInfo(List.of(bookingInfoResponse))
-                .priceInfo(priceInfoResponse)
-                //.airInfo(List.of(airInfoResponse))
-                .passengerInfo(passengerTypeList)
-                .build();
-    }
+//
+//        // map the bookin info
+//        BookingInfoResponse bookingInfoResponse = mapperService.mapToBookingInfo(bookingInfo.getJSONObject(0));
+//
+//        // map the passengerType
+//
+//        JSONArray passengerType = airPricingInfoObj.getJSONObject(0).getJSONArray("passengerType");
+//
+//        log.info("PASSENGER INFO : {}", passengerType);
+//
+//        List<PassengerType> passengerTypeList = mapperService.mapPassengerTypes(passengerType);
+//
+////        PriceInfoResponse priceInfoResponse = mapperService.mapToPriceInfo(airPricingInfoObj);
+//        return FlightByPnrCodeResponse.builder()
+//                .status(200)
+//                .message("success")
+//                .bookingStatus(bookingStatus)
+//                .pnrCode(pnr)
+//                .version(version)
+//                .travelers(travelerResponseList)
+//                .bookingInfo(List.of(bookingInfoResponse))
+//                .priceInfo(priceInfoResponse)
+//                //.airInfo(List.of(airInfoResponse))
+//                .passengerInfo(passengerTypeList)
+//                .build();
+//    }
 
 
     // TODO: locatorCodeCode to be changed after fix from ivan

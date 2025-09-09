@@ -108,19 +108,19 @@ public class MapperService {
     }
 
     // RETRIVE BOOKING MAPPINGS
-    public List<TravelerResponse> mapToTravelerResponse(JSONArray travelerArray) {
-        List<TravelerResponse> travelerResponses = new ArrayList<>();
-
-        for (int i = 0; i < travelerArray.length(); i++) {
-            JSONObject travelerObj = travelerArray.getJSONObject(i);
-
-            TravelerResponse travelerResponse = TravelerResponse.builder().prefix(travelerObj.getJSONObject("bookingTravelerName").optString("prefix")).firstName(travelerObj.getJSONObject("bookingTravelerName").optString("first")).middleName(travelerObj.getJSONObject("bookingTravelerName").optString("middle")).lastName(travelerObj.getJSONObject("bookingTravelerName").optString("last")).suffix(travelerObj.getJSONObject("bookingTravelerName").optString("suffix")).location(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("location")).phoneNumber(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("number")).build();
-
-            travelerResponses.add(travelerResponse);
-        }
-
-        return travelerResponses;
-    }
+//    public List<TravelerResponse> mapToTravelerResponse(JSONArray travelerArray) {
+//        List<TravelerResponse> travelerResponses = new ArrayList<>();
+//
+//        for (int i = 0; i < travelerArray.length(); i++) {
+//            JSONObject travelerObj = travelerArray.getJSONObject(i);
+//
+//            TravelerResponse travelerResponse = TravelerResponse.builder().title(travelerObj.getJSONObject("bookingTravelerName").optString("prefix")).firstName(travelerObj.getJSONObject("bookingTravelerName").optString("first")).middleName(travelerObj.getJSONObject("bookingTravelerName").optString("middle")).lastName(travelerObj.getJSONObject("bookingTravelerName").optString("last")).suffix(travelerObj.getJSONObject("bookingTravelerName").optString("suffix")).location(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("location")).phoneNumber(travelerObj.getJSONArray("phoneNumber").getJSONObject(0).optString("number")).build();
+//
+//            travelerResponses.add(travelerResponse);
+//        }
+//
+//        return travelerResponses;
+//    }
 
     // MAP PASSENGER TYPE
     List<PassengerType> passengerTypes = new ArrayList<>();
@@ -329,6 +329,9 @@ public class MapperService {
 
         double conversionRate = currencyService.convertCurrency(fromCurrency, currency);
         double convertedFareAmount = originalFareAmount * conversionRate;
+
+        log.info("Converted Fare: {}", convertedFareAmount);
+        log.info("flight type : {}", flightType);
 
         double commission = commissionService.calculateCommission(convertedFareAmount, flightType, "ADMIN");
 
